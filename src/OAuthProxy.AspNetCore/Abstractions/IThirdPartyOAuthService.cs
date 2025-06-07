@@ -1,6 +1,6 @@
 ﻿namespace OAuthProxy.AspNetCore.Abstractions
 {
-    public interface IThirdPartyService
+    public interface IThirdPartyOAuthService
     {
         string ServiceName { get; }
         Task<string> GetAuthorizeUrlAsync(string redirectUri);

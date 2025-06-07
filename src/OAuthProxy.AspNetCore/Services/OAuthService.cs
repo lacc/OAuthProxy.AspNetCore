@@ -40,7 +40,7 @@ namespace OAuthProxy.AspNetCore.Services
                 var service = _serviceFactory.GetService(serviceName);
                 if (string.IsNullOrEmpty(token.RefreshToken))
                 {
-                    _logger.LogWarning("Access token expired and no refresh token available for user {UserId} and service {ServiceName}.", userId, serviceName);
+                    _logger.LogError("Access token expired and no refresh token available for user {UserId} and service {ServiceName}.", userId, serviceName);
                     throw new InvalidOperationException("Access token expired and no refresh token available.");
                 }
                    

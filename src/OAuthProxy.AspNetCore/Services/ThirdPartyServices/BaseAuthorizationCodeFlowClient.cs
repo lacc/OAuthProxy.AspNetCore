@@ -9,7 +9,7 @@ using System.Web;
 
 namespace OAuthProxy.AspNetCore.Services.ThirdPartyServices
 {
-    public abstract class BaseAuthorizationCodeFlowClient : IThirdPartyService
+    public abstract class BaseAuthorizationCodeFlowClient : IThirdPartyOAuthService
     {
         private readonly HttpClient _httpClient;
         protected readonly ThirdPartyServiceConfig Config;
@@ -37,7 +37,8 @@ namespace OAuthProxy.AspNetCore.Services.ThirdPartyServices
             return await Task.FromResult( $"{Config.AuthorizeEndpoint}?{query}");
         }
 
-        public virtual async Task<(string AccessToken, string RefreshToken, DateTime Expiry)> ExchangeCodeAsync(string code, string redirectUri)
+        public virtual async Task<(string AccessToken, string RefreshToken, DateTime Expiry)> 
+            ExchangeCodeAsync(string code, string redirectUri)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, Config.TokenEndpoint)
             {
@@ -65,7 +66,8 @@ namespace OAuthProxy.AspNetCore.Services.ThirdPartyServices
             return (tokenResponse.AccessToken, tokenResponse.RefreshToken ?? string.Empty, DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn));
         }
 
-        public virtual async Task<(string AccessToken, string RefreshToken, DateTime Expiry)> RefreshAccessTokenAsync(string refreshToken)
+        public virtual async Task<(string AccessToken, string RefreshToken, DateTime Expiry)> 
+            RefreshAccessTokenAsync(string refreshToken)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, Config.TokenEndpoint)
             {

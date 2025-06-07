@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Services;
 using System.Security.Claims;
 
@@ -10,53 +11,62 @@ namespace OAuthProxy.AspNetCore.Apis;
 
 public static class OAuthApi
 {
-    public const string DefaultUserId = "123";
     public static RouteGroupBuilder MapOAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var api = app.MapGroup("/api/oauth");//.HasApiVersion(1.0);
 
-        api.MapGet("{serviceName}/authorize", async (string serviceName, HttpRequest request, OAuthService oauthService) =>
+        api.MapGet("{serviceName}/authorize", async (string serviceName, HttpRequest request, OAuthService oauthService, IUserIdProvider userIdProvider) =>
         {
+            var userId = userIdProvider.GetCurrentUserId();
             var redirectUri = request.GetDisplayUrl().Replace("authorize", "callback");
             var authorizeUrl = await oauthService.GetAuthorizeUrlAsync(serviceName, redirectUri);
             return TypedResults.Ok(new { AuthorizeUrl = authorizeUrl });
         })
         .WithDisplayName("Authorization URL")
         .WithDescription("Get the authorization URL for a third-party service.")
-        .WithName("GetAuthorizationUrl") ;
+        .WithName("GetAuthorizationUrl") 
+        .RequireAuthorization();
         
 
-        api.MapGet("{serviceName}/callback", async Task<Results<Ok<string>, BadRequest<string>>> 
-            (string serviceName, string code, HttpRequest request, OAuthService oauthService) =>
+        api.MapGet("{serviceName}/callback", async Task<Results<Ok<string>, BadRequest<string>, UnauthorizedHttpResult>> 
+            (string serviceName, string code, HttpRequest request, OAuthService oauthService, IUserIdProvider userIdProvider) =>
         {
-            var userId = request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            try
+            {
+                var userId = userIdProvider.GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return TypedResults.Unauthorized();
+                }
+
+                var redirectUri = request.GetDisplayUrl();
+                if (await oauthService.HandleCallbackAsync(userId, serviceName, code, redirectUri))
+                {
+                    return TypedResults.Ok("Authorization successful.");
+                }
+
+                return TypedResults.BadRequest("Authorization failed. Invalid code or redirect URI.");
+            }
+            catch (Exception ex)
+            {
+                return TypedResults.BadRequest($"Error processing oautht hird party callback: {ex.Message}");
+            }
+        })
+        .AllowAnonymous();
+
+        api.MapGet("{serviceName}/hasValidToken", async Task<Results<Ok<bool>, UnauthorizedHttpResult>> 
+            (string serviceName, HttpRequest request, OAuthService oauthService, IUserIdProvider userIdProvider) =>
+        {
+            var userId = userIdProvider.GetCurrentUserId(); 
             if (string.IsNullOrEmpty(userId))
             {
-                userId = DefaultUserId;
-                //return TypedResults.BadRequest("User not authenticated.");
-            }
-
-            var redirectUri = request.GetDisplayUrl();
-            if (await oauthService.HandleCallbackAsync(userId, serviceName, code, redirectUri))
-            {
-                return TypedResults.Ok("Authorization successful.");
-            }
-
-            return TypedResults.BadRequest("Authorization failed. Invalid code or redirect URI.");
-        });
-
-        api.MapGet("{serviceName}/hasValidToken", async (string serviceName, HttpRequest request, OAuthService oauthService) =>
-        {
-            var userId = request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                userId = DefaultUserId;
-                //return TypedResults.BadRequest("User not authenticated.");
+                return TypedResults.Unauthorized();
             }
 
             var authorizeUrl = await oauthService.GetValidAccessTokenAsync(userId, serviceName);
             return TypedResults.Ok(!string.IsNullOrEmpty(authorizeUrl));
-        });
+        })
+        .RequireAuthorization();
 
 
         return api;

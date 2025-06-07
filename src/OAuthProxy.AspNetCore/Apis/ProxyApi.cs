@@ -13,14 +13,13 @@ namespace OAuthProxy.AspNetCore.Apis
         {
             var api = app.MapGroup("/api/proxy/");
             
-            api.MapGet("{serviceName}/{endpoint}", async Task<Results<Ok<string>, BadRequest<string>>> 
+            api.MapGet("{serviceName}/{endpoint}", async Task<Results<Ok<string>, BadRequest<string>, UnauthorizedHttpResult>> 
                 (string serviceName, string endpoint, HttpRequest request, ThirdPartyServiceFactory serviceFactory, OAuthService oauthService) =>
             {
                 var userId = request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    userId = OAuthApi.DefaultUserId;
-                    //return TypedResults.BadRequest("User not authenticated.");
+                    return TypedResults.Unauthorized();
                 }
                 
                 var service = serviceFactory.GetService(serviceName);
@@ -46,15 +45,16 @@ namespace OAuthProxy.AspNetCore.Apis
                 //    ContentType = response.Content.Headers.ContentType?.ToString(),
                 //    StatusCode = (int)response.StatusCode
                 //};
-            });
-            api.MapPost("{serviceName}/{endpoint}", async Task<Results<Ok<string>, BadRequest<string>>>
+            })
+            .RequireAuthorization();
+            
+            api.MapPost("{serviceName}/{endpoint}", async Task<Results<Ok<string>, BadRequest<string>, UnauthorizedHttpResult>>
                 (string serviceName, string endpoint, object body, HttpRequest request, ThirdPartyServiceFactory serviceFactory, OAuthService oauthService) =>
             {
                 var userId = request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    userId = OAuthApi.DefaultUserId;
-                    //return TypedResults.BadRequest("User not authenticated.");
+                    return TypedResults.Unauthorized();
                 }
 
                 var service = serviceFactory.GetService(serviceName);
@@ -81,7 +81,9 @@ namespace OAuthProxy.AspNetCore.Apis
                 //    ContentType = response.Content.Headers.ContentType?.ToString(),
                 //    StatusCode = (int)response.StatusCode
                 //};
-            });
+            })
+            .RequireAuthorization();
+
             return api; 
         }
     }
