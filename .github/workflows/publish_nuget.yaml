@@ -21,7 +21,7 @@ jobs:
       with:
         sparse-checkout: |
           .github
-          src
+          OAuthProxy/src
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
