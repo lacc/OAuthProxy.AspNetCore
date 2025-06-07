@@ -21,7 +21,7 @@ jobs:
       with:
         sparse-checkout: |
           .github
-          OAuthProxy/src
+          src
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
@@ -29,16 +29,16 @@ jobs:
         dotnet-version: '9.0.x'  # Use the appropriate .NET version for your application
 
     - name: Restore dependencies
-      run: dotnet restore "$GITHUB_WORKSPACE/OAuthProxy/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj"
+      run: dotnet restore "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj"
 
     #- name: Run Tests (Optional)
     #  run: dotnet test --no-build --configuration Release --logger trx --results-directory ./test-results ./**/*.Tests.csproj
     
     - name: Build
-      run: dotnet build "$GITHUB_WORKSPACE/OAuthProxy/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-restore
+      run: dotnet build "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-restore
 
     - name: Pack
-      run: dotnet pack "$GITHUB_WORKSPACE/OAuthProxy/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-build --output ./publish
+      run: dotnet pack "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-build --output ./publish
 
     - name: Upload Publish Directory as Artifact
       uses: actions/upload-artifact@v4
