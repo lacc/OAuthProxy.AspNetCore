@@ -69,6 +69,9 @@ namespace OAuthProxy.AspNetCore.Services
                 .ToListAsync();
         }
 
-
+        internal async Task<UserTokenDTO> RefreshTokenAsync(string userId, string serviceName, string refreshToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

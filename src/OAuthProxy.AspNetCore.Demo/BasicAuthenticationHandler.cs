@@ -16,11 +16,11 @@ internal class BasicAuthenticationHandler : AuthenticationHandler<Authentication
         // Get the authorization header from the request.
         if (!Request.Headers.ContainsKey("Authorization"))
         {
-            throw new System.Security.Authentication.AuthenticationException("Authorization header is missing.");
+            return AuthenticateResult.Fail("Authorization header is missing.");
         }
 
         // Extract the username and password from the authorization header.
-        string authorizationHeader = Request.Headers["Authorization"]!;
+        string authorizationHeader = Request.Headers.Authorization!;
         string encodedUsernamePassword = authorizationHeader.Substring("Basic ".Length).Trim();
         byte[] decodedBytes = Convert.FromBase64String(encodedUsernamePassword);
         string[] usernamePassword = Encoding.UTF8.GetString(decodedBytes).Split(':');

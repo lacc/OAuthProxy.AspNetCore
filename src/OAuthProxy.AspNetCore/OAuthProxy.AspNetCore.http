@@ -1,0 +1,15 @@
+﻿@OAuthProxy.AspNetCore_HostAddress = https://localhost:7135
+#test@test
+@authHeader=Basic dGVzdDp0ZXN0  
+
+###
+GET {{OAuthProxy.AspNetCore_HostAddress}}/api/proxy/ServiceA/authorize
+X-Requested-With: XMLHttpRequest
+Authorization: {{authHeader}}
+###
+@endpoint=test
+GET {{OAuthProxy.AspNetCore_HostAddress}}/api/proxy/ServiceA/{{endpoint}}
+X-Requested-With: XMLHttpRequest
+Authorization: {{authHeader}}
+###
+

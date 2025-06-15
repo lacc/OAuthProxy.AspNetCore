@@ -5,14 +5,15 @@ namespace OAuthProxy.AspNetCore.Extensions;
 
 public static class OAuthStartupExtensions
 {
-    public static OAuthProxyServiceBuilder AddThirdPartyOAuthProxy(
+    public static IServiceCollection AddThirdPartyOAuthProxy(
         this IServiceCollection services,
         IConfiguration configuration,
-        string thirdPartyClientConfigKey = "ThirdPartyServices")
+        Action<ThirdPartyOAuthProxyBuilder> builderAction)
     {
-        var builder = new OAuthProxyServiceBuilder(services, configuration);
-        builder.ConfigureThirdPartyOAuthProxyServices(thirdPartyClientConfigKey);
+        var builder = new ThirdPartyOAuthProxyBuilder(services, configuration);
+        builderAction?.Invoke(builder);
+        builder.Build();
 
-        return builder;
+        return services;
     }
 }
