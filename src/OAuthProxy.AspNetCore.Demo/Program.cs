@@ -3,28 +3,38 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OAuthProxy.AspNetCore.Apis;
+using OAuthProxy.AspNetCore.Demo;
 using OAuthProxy.AspNetCore.Demo.Services;
 using OAuthProxy.AspNetCore.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddThirdPartyOAuthProxy(builder.Configuration)
-    .WithTokenStorageDatabase(options =>
+builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => proxyBuilder
+    .WithTokenStorageOptions(options =>
     {
-        var sqlLiteConnectionString = builder.Configuration.GetConnectionString("SqliteConnection");
-        if (!string.IsNullOrEmpty(sqlLiteConnectionString))
+        options.AutoMigration = true; // Enable automatic migration for the database
+        options.DatabaseOptions = dbOptions =>
         {
-            options.UseSqlite(sqlLiteConnectionString);
-        }
-        else
-        {
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-        }
+            var sqlLiteConnectionString = builder.Configuration.GetConnectionString("SqliteConnection");
+            if (!string.IsNullOrEmpty(sqlLiteConnectionString))
+            {
+                dbOptions.UseSqlite(sqlLiteConnectionString);
+            }
+            else
+            {
+                dbOptions.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            }
+        };
     })
-    .WithOAuthServiceClient<ThirdPartyClientA>("ServiceA")
-    .WithDefaultJwtUserIdProvider();
-
+    .AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
+        .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
+    .AddOAuthServiceClient<ThirdPartyClientA>("ServiceB", proxyClientBuilder => proxyClientBuilder
+        .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
+        {
+            builder.ConfigureTokenExchanger<DummyCodeExchanger>();
+        }))
+);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
@@ -45,11 +55,9 @@ builder.Services.AddOpenApi(options =>
 
 //Add basic dummy authentication handler
 builder.Services.AddAuthentication("Basic")
-           .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null);
-builder.Services.AddAuthorization(options =>
-{
-    options.DefaultPolicy = new AuthorizationPolicyBuilder("Basic").RequireAuthenticatedUser().Build();
-});
+    .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null);
+builder.Services.AddAuthorizationBuilder()
+    .SetDefaultPolicy(new AuthorizationPolicyBuilder("Basic").RequireAuthenticatedUser().Build());
 
 var app = builder.Build();
 
@@ -73,8 +81,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapOAuthEndpoints();
-app.MapProxyEndpoints();
+app.MapProxyClientEndpoints();
 
 app.Run();
 

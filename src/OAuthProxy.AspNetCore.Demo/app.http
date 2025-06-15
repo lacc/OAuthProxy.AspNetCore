@@ -4,25 +4,3 @@
 
 
 ###
-
-@serviceName=ServiceA
-GET {{OAuthProxy.AspNetCore.Demo_HostAddress}}/api/oauth/{{serviceName}}/authorize
-
-###
-
-@code=string
-GET {{OAuthProxy.AspNetCore.Demo_HostAddress}}/api/oauth/{{serviceName}}/callback?code={{code}}
-
-###
-
-GET {{OAuthProxy.AspNetCore.Demo_HostAddress}}/api/oauth/{{serviceName}}/hasValidToken
-
-###
-
-@endpoint=string
-GET {{OAuthProxy.AspNetCore.Demo_HostAddress}}/api/proxy/{{serviceName}}/{{endpoint}}
-
-###
-
-
-###

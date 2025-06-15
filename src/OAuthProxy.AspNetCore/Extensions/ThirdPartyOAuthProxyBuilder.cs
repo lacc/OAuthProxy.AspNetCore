@@ -1,0 +1,104 @@
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using OAuthProxy.AspNetCore.Abstractions;
+using OAuthProxy.AspNetCore.Configurations;
+using OAuthProxy.AspNetCore.Data;
+using OAuthProxy.AspNetCore.Handlers;
+using OAuthProxy.AspNetCore.Services;
+using OAuthProxy.AspNetCore.Services.UserServices;
+
+namespace OAuthProxy.AspNetCore.Extensions
+{
+    public class ThirdPartyOAuthProxyBuilder
+    {
+        private readonly IServiceCollection _services;
+        private readonly IConfiguration _configuration;
+
+        OAuthProxyConfiguration BuilderOptions { get; }
+        public ThirdPartyOAuthProxyBuilder(IServiceCollection services, IConfiguration configuration)
+        {
+            BuilderOptions = new OAuthProxyConfiguration();
+            _services = services;
+            _configuration = configuration;
+        }
+
+        public ThirdPartyOAuthProxyBuilder WithTokenStorageOptions(Action<TokenStorageConfiguration> dbOptions)
+        {
+            dbOptions?.Invoke(BuilderOptions.TokenStorageConfiguration);
+            _services.AddDbContext<TokenDbContext>(BuilderOptions.TokenStorageConfiguration.DatabaseOptions);
+            if (BuilderOptions.TokenStorageConfiguration.AutoMigration)
+            {
+                //_logger.LogInformation("Configuring automatic database migrations for OAuth token storage.");
+                _services.AddHostedService<DatabaseMigrationService>();
+            }
+            _services.AddScoped<TokenStorageService>();
+            return this;
+        }
+        public ThirdPartyOAuthProxyBuilder WithDefaultJwtUserIdProvider()
+        {
+            if (BuilderOptions.UserIdProvider != null)
+            {
+                throw new InvalidOperationException("User ID provider is already configured.");
+            }
+            BuilderOptions.UserIdProvider = typeof(JwtUserIdProvider);
+            _services.AddHttpContextAccessor();
+            _services.AddScoped<IUserIdProvider, JwtUserIdProvider>();
+            return this;
+        }
+        public ThirdPartyOAuthProxyBuilder WithUserIdProvider<TUserIdProvider>()
+            where TUserIdProvider : class, IUserIdProvider
+        {
+            if (BuilderOptions.UserIdProvider != null)
+            {
+                throw new InvalidOperationException("User ID provider is already configured.");
+            }
+            BuilderOptions.UserIdProvider = typeof(TUserIdProvider);
+            _services.AddScoped<IUserIdProvider, TUserIdProvider>();
+            return this;
+        }
+
+        public ThirdPartyOAuthProxyBuilder AddOAuthServiceClient<TServiceClient>(string serviceProviderName, Action<ProxyClientBuilder<TServiceClient>>? clientBuilderAction = null)
+            where TServiceClient : class
+        {
+            if (string.IsNullOrWhiteSpace(serviceProviderName))
+            {
+                throw new ArgumentException("Service provider name cannot be null or empty.", nameof(serviceProviderName));
+            }
+            var serviceConfig = BuilderOptions.ProxyClientBuilders.FirstOrDefault(s => s.ServiceProviderName.Equals(serviceProviderName, StringComparison.OrdinalIgnoreCase));
+            if (serviceConfig != null)
+            {
+                throw new InvalidOperationException($"Service provider '{serviceProviderName}' is already configured.");
+            }
+
+            var clientBuilder = new ProxyClientBuilder<TServiceClient>(serviceProviderName, _services, _configuration, BuilderOptions.ThirdPartyClientConfigKey);
+            clientBuilderAction?.Invoke(clientBuilder);
+
+            BuilderOptions.ProxyClientBuilders.Add(clientBuilder);
+            _services.AddSingleton<IRegisteredProxyProviders>(clientBuilder);
+
+            return this;
+        }
+
+        public void Build()
+        {
+            _services.AddScoped<IProxyRequestContext, ProxyRequestContext>();
+            _services.AddScoped<AuthorizationFlowServiceFactory>();
+            _services.AddScoped<IAuthorizationStateService, AuthorizationStateService>();
+            _services.AddScoped< BasicOAuthBearerTokenHandler >();
+            //_services.AddScoped<OAuthProxyMiddleware>();
+
+            if (BuilderOptions.UserIdProvider == null)
+            {
+                WithDefaultJwtUserIdProvider();
+            }
+
+            foreach (var clientBuilder in BuilderOptions.ProxyClientBuilders)
+            {
+                clientBuilder.Build();
+
+            }
+
+
+        }
+    }
+}

@@ -1,10 +1,10 @@
 ﻿namespace OAuthProxy.AspNetCore.Demo.Services
 {
-    public class ThirdPartyClientA
+    public class ThirdPartyClientB
     {
         private readonly HttpClient _httpClient;
 
-        public ThirdPartyClientA([FromKeyedServices("ServiceA")] HttpClient httpClient)
+        public ThirdPartyClientB([FromKeyedServices("ServiceB")] HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
@@ -12,7 +12,7 @@
         public string CallSomeMethod()
         {
             // Simulate a call to API
-            return "ServiceA API called successfully!";
+            return "ServiceB API called successfully!";
         }
     }
 }

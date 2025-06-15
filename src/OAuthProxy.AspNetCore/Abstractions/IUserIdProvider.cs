@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-
-namespace OAuthProxy.AspNetCore.Abstractions
+﻿namespace OAuthProxy.AspNetCore.Abstractions
 {
     public interface IUserIdProvider
     {
