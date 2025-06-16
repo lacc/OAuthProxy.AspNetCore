@@ -33,9 +33,16 @@ jobs:
       run: dotnet build "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-restore
 
     - name: Run Tests
-      run: dotnet test --configuration Release --logger trx --results-directory ./test-results/${{github.run_id}} $GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore.Tests/OAuthProxy.AspNetCore.Tests.csproj
+      run: dotnet test --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory ./test-results/${{github.run_id}} $GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore.Tests/OAuthProxy.AspNetCore.Tests.csproj
     
-    
+    - name: Test Report
+      uses: dorny/test-reporter@v2
+      if: ${{ !cancelled() }}       # run this step even if previous step failed
+      with:
+        name: XUnit Tests            # Name of the check run which will be created
+        path: ./test-results/${{github.run_id}}/*.trx    # Path to test results
+        reporter: dotnet-trx        # Format of test results
+
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v4
       with:
