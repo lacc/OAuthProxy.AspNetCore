@@ -36,10 +36,10 @@ namespace OAuthProxy.AspNetCore.Extensions
         }
         public ThirdPartyOAuthProxyBuilder WithDefaultJwtUserIdProvider()
         {
-            BuilderOptions.UserIdProvider = (sp) =>
+            BuilderOptions.UserIdProvider = (services) =>
             {
-                 _services.AddHttpContextAccessor();
-                 _services.AddScoped<IUserIdProvider, JwtUserIdProvider>();
+                services.AddHttpContextAccessor();
+                services.AddScoped<IUserIdProvider, JwtUserIdProvider>();
             };
 
             return this;
@@ -47,10 +47,10 @@ namespace OAuthProxy.AspNetCore.Extensions
         public ThirdPartyOAuthProxyBuilder WithUserIdProvider<TUserIdProvider>()
             where TUserIdProvider : class, IUserIdProvider
         {
-            BuilderOptions.UserIdProvider = (sp) =>
+            BuilderOptions.UserIdProvider = (services) =>
             {
-                _services.AddHttpContextAccessor();
-                _services.AddScoped<IUserIdProvider, TUserIdProvider>();
+                services.AddHttpContextAccessor();
+                services.AddScoped<IUserIdProvider, TUserIdProvider>();
             };
 
             return this;
