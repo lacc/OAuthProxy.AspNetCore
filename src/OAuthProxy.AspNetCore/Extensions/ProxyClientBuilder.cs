@@ -75,7 +75,9 @@ namespace OAuthProxy.AspNetCore.Extensions
             }
 
             if (_builderOption.AuthorizationFlowBuilder == null)
+            {
                 throw new InvalidOperationException("AuthorizationFlowBuilder must be set before building the client.");
+            }
             _builderOption.AuthorizationFlowBuilder?.Build();
 
             _services.Configure<ThirdPartyProviderConfig>(_builderOption.ServiceProviderName, options =>
