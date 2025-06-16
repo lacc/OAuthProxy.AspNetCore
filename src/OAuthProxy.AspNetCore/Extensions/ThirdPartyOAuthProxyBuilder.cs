@@ -31,29 +31,28 @@ namespace OAuthProxy.AspNetCore.Extensions
                 //_logger.LogInformation("Configuring automatic database migrations for OAuth token storage.");
                 _services.AddHostedService<DatabaseMigrationService>();
             }
-            _services.AddScoped<TokenStorageService>();
+            _services.AddScoped<ITokenStorageService, TokenStorageService>();
             return this;
         }
         public ThirdPartyOAuthProxyBuilder WithDefaultJwtUserIdProvider()
         {
-            if (BuilderOptions.UserIdProvider != null)
+            BuilderOptions.UserIdProvider = (services) =>
             {
-                throw new InvalidOperationException("User ID provider is already configured.");
-            }
-            BuilderOptions.UserIdProvider = typeof(JwtUserIdProvider);
-            _services.AddHttpContextAccessor();
-            _services.AddScoped<IUserIdProvider, JwtUserIdProvider>();
+                services.AddHttpContextAccessor();
+                services.AddScoped<IUserIdProvider, JwtUserIdProvider>();
+            };
+
             return this;
         }
         public ThirdPartyOAuthProxyBuilder WithUserIdProvider<TUserIdProvider>()
             where TUserIdProvider : class, IUserIdProvider
         {
-            if (BuilderOptions.UserIdProvider != null)
+            BuilderOptions.UserIdProvider = (services) =>
             {
-                throw new InvalidOperationException("User ID provider is already configured.");
-            }
-            BuilderOptions.UserIdProvider = typeof(TUserIdProvider);
-            _services.AddScoped<IUserIdProvider, TUserIdProvider>();
+                services.AddHttpContextAccessor();
+                services.AddScoped<IUserIdProvider, TUserIdProvider>();
+            };
+
             return this;
         }
 
@@ -91,6 +90,8 @@ namespace OAuthProxy.AspNetCore.Extensions
             {
                 WithDefaultJwtUserIdProvider();
             }
+
+            BuilderOptions.UserIdProvider?.Invoke(_services);
 
             foreach (var clientBuilder in BuilderOptions.ProxyClientBuilders)
             {

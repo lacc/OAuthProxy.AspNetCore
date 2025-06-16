@@ -39,19 +39,6 @@ namespace OAuthProxy.AspNetCore.Extensions
             };
         }
 
-
-        public ProxyClientBuilder<TClient> WithAuthorizationConfig(ThirdPartyServiceConfig oauthConfiguration)
-        {
-            if (oauthConfiguration == null)
-            {
-                throw new ArgumentNullException(nameof(oauthConfiguration), "OAuth configuration cannot be null.");
-            }
-            _builderOption.OAuthConfiguration = oauthConfiguration;
-
-            return this;
-        }
-
-
         public ProxyClientBuilder<TClient> WithAuthorizationConfig(IConfigurationSection configurationSection)
         {
             _builderOption.OAuthConfiguration = new ThirdPartyServiceConfig();
@@ -87,6 +74,10 @@ namespace OAuthProxy.AspNetCore.Extensions
                     throw new InvalidOperationException($"Default Configuration for '{DefaultConfigKey}' not found.");
             }
 
+            if (_builderOption.AuthorizationFlowBuilder == null)
+            {
+                throw new InvalidOperationException("AuthorizationFlowBuilder must be set before building the client.");
+            }
             _builderOption.AuthorizationFlowBuilder?.Build();
 
             _services.Configure<ThirdPartyProviderConfig>(_builderOption.ServiceProviderName, options =>

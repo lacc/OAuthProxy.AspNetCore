@@ -1,23 +1,20 @@
 ﻿using OAuthProxy.AspNetCore.Abstractions;
-using OAuthProxy.AspNetCore.Services;
 using System.Net.Http.Headers;
 
 namespace OAuthProxy.AspNetCore.Handlers
 {
     internal class BasicOAuthBearerTokenHandler: DelegatingHandler
     {
-        private readonly TokenStorageService _tokenCache;
+        private readonly ITokenStorageService _tokenService;
         private readonly IUserIdProvider _userIdProvider;
         private readonly IProxyRequestContext _proxyRequestContext;
 
-        //private readonly ITokenService _tokenService;
 
-        public BasicOAuthBearerTokenHandler(TokenStorageService tokenCache, IUserIdProvider userIdProvider, IProxyRequestContext proxyRequestContext)//ITokenService tokenService)
+        public BasicOAuthBearerTokenHandler(ITokenStorageService tokenService, IUserIdProvider userIdProvider, IProxyRequestContext proxyRequestContext)
         {
-            _tokenCache = tokenCache;
+            _tokenService = tokenService;
             _userIdProvider = userIdProvider;
             _proxyRequestContext = proxyRequestContext;
-            //_tokenService = tokenService;
 
         }
 
@@ -44,7 +41,7 @@ namespace OAuthProxy.AspNetCore.Handlers
                     Content = new StringContent("Service name is not specified.")
                 };
             }
-            var token = await _tokenCache.GetTokenAsync(userId, serviceName);
+            var token = await _tokenService.GetTokenAsync(userId, serviceName);
             
             if (token == null)
             {
@@ -71,7 +68,7 @@ namespace OAuthProxy.AspNetCore.Handlers
                     // If the token is expired but a refresh token is available, we can attempt to refresh it
                     try
                     {
-                        var refreshedToken = await _tokenCache.RefreshTokenAsync(userId, serviceName, token.RefreshToken);
+                        var refreshedToken = await _tokenService.RefreshTokenAsync(userId, serviceName, token.RefreshToken);
                         if (refreshedToken != null)
                         {
                             token = refreshedToken;
