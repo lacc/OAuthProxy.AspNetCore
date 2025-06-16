@@ -1,0 +1,43 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/src/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # concurrency:
+    #   group: staging_environment
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          .github
+          src
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'  # Use the appropriate .NET version for your application
+
+    - name: Restore dependencies
+      run: dotnet restore "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj"
+  
+    - name: Run Tests
+      run: dotnet test --configuration Release --logger trx --results-directory ./test-results/${{github.run_id}} ./**/*.Tests.csproj
+    
+    - name: Build
+      run: dotnet build "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-restore
+
+    - name: Upload dotnet test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: dotnet-test-results-${{github.run_id}}
+        path: ./test-results/${{github.run_id}}
+        

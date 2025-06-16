@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - '**/src/**'
-      - '.github/workflows/publish_nuget.yaml'
+      - '.github/workflows/cicd_publish_nuget.yaml'
 
 
 jobs:
