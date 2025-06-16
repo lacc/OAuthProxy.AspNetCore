@@ -29,12 +29,13 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj"
   
-    - name: Run Tests
-      run: dotnet test --configuration Release --logger trx --results-directory ./test-results/${{github.run_id}} $GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore.Tests/OAuthProxy.AspNetCore.Tests.csproj
-    
     - name: Build
       run: dotnet build "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-restore
 
+    - name: Run Tests
+      run: dotnet test --configuration Release --logger trx --results-directory ./test-results/${{github.run_id}} $GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore.Tests/OAuthProxy.AspNetCore.Tests.csproj
+    
+    
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v4
       with:
