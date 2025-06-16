@@ -30,7 +30,7 @@ jobs:
       run: dotnet restore "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj"
   
     - name: Run Tests
-      run: dotnet test --configuration Release --logger trx --results-directory ./test-results/${{github.run_id}} ./**/*.Tests.csproj
+      run: dotnet test --configuration Release --logger trx --results-directory ./test-results/${{github.run_id}} $GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore.Tests/OAuthProxy.AspNetCore.Tests.csproj
     
     - name: Build
       run: dotnet build "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-restore
