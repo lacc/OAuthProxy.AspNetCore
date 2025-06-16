@@ -34,7 +34,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var db = CreateInMemoryDbContext();
             var service = CreateService(db, "user1");
             var url = "https://example.com/auth?client_id=abc";
-
+            
             var result = await service.DecorateWithStateAsync("providerA", url);
 
             Assert.Contains("state=", result);

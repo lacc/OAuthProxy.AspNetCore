@@ -33,12 +33,8 @@ namespace OAuthProxy.AspNetCore.Services
             }
 
             var state = await GenerateStateAsync(userId, thirdPartyProvider);
-
-            var uri = new UriBuilder(authorizeUrl);
-            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
-            query["state"] = state;
-            uri.Query = query.ToString();
-            var res = uri.ToString();
+            
+            var res = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(authorizeUrl, "state", state);
 
             return res;
         }
