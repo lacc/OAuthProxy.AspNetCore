@@ -30,9 +30,9 @@ jobs:
 
     - name: Restore dependencies
       run: dotnet restore "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj"
-
-    #- name: Run Tests (Optional)
-    #  run: dotnet test --no-build --configuration Release --logger trx --results-directory ./test-results ./**/*.Tests.csproj
+  
+    - name: Run Tests
+      run: dotnet test --configuration Release --logger trx --results-directory ./test-results/${{github.run_id}} ./**/*.Tests.csproj
     
     - name: Build
       run: dotnet build "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" --configuration Release --no-restore
@@ -40,6 +40,12 @@ jobs:
     - name: Pack
       run: dotnet pack "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" -p:PackageVersion=2.1.0 --version-suffix "${{github.run_id}}"  --configuration Release --no-build --output ./publish
 
+    - name: Upload dotnet test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: dotnet-test-results-${{github.run_id}}
+        path: ./test-results/${{github.run_id}}
+        
     - name: Upload Publish Directory as Artifact
       uses: actions/upload-artifact@v4
       with:

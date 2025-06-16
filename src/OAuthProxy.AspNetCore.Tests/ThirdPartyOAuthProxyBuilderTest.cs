@@ -6,7 +6,7 @@ using OAuthProxy.AspNetCore.Extensions;
 using OAuthProxy.AspNetCore.Services;
 using OAuthProxy.AspNetCore.Services.UserServices;
 
-namespace OAuthProxy.AspNetCore.Test
+namespace OAuthProxy.AspNetCore.Tests
 {
     public class ThirdPartyOAuthProxyBuilderTest
     {
@@ -40,7 +40,7 @@ namespace OAuthProxy.AspNetCore.Test
 
             var provider = services.BuildServiceProvider();
             Assert.True(dbOptionsCalled);
-            Assert.NotNull(provider.GetService<TokenStorageService>());
+            Assert.NotNull(provider.GetService<ITokenStorageService>());
             Assert.NotNull(provider.GetService<TokenDbContext>());
         }
 

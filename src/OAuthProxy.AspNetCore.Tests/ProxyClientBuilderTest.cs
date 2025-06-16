@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using OAuthProxy.AspNetCore.Extensions;
 
-namespace OAuthProxy.AspNetCore.Test
+namespace OAuthProxy.AspNetCore.Tests
 {
     public class ProxyClientBuilderTest
     {

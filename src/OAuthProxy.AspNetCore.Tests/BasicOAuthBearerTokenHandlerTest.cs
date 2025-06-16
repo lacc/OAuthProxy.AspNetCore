@@ -5,7 +5,7 @@ using OAuthProxy.AspNetCore.Handlers;
 using OAuthProxy.AspNetCore.Models;
 using System.Net;
 
-namespace OAuthProxy.AspNetCore.Test
+namespace OAuthProxy.AspNetCore.Tests
 {
     public class BasicOAuthBearerTokenHandlerTest
     {

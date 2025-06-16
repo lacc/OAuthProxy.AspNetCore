@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthProxy.AspNetCore", "OA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthProxy.AspNetCore.Demo", "OAuthProxy.AspNetCore.Demo\OAuthProxy.AspNetCore.Demo.csproj", "{36B679F1-012B-46CC-80F5-0DFC8FA1D5C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthProxy.AspNetCore.Test", "OAuthProxy.AspNetCore.Test\OAuthProxy.AspNetCore.Test.csproj", "{8634740B-727F-438C-A11C-53146D0DF4C5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthProxy.AspNetCore.Tests", "OAuthProxy.AspNetCore.Tests\OAuthProxy.AspNetCore.Tests.csproj", "{8634740B-727F-438C-A11C-53146D0DF4C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

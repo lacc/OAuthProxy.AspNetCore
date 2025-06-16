@@ -2,7 +2,7 @@
 using OAuthProxy.AspNetCore.Data;
 using OAuthProxy.AspNetCore.Services;
 
-namespace OAuthProxy.AspNetCore.Test
+namespace OAuthProxy.AspNetCore.Tests
 {
     public class TokenStorageServiceTest
     {
