@@ -1,18 +1,17 @@
 ﻿using OAuthProxy.AspNetCore.Abstractions;
-using OAuthProxy.AspNetCore.Services;
 using System.Net.Http.Headers;
 
 namespace OAuthProxy.AspNetCore.Handlers
 {
     internal class BasicOAuthBearerTokenHandler: DelegatingHandler
     {
-        private readonly TokenStorageService _tokenCache;
+        private readonly ITokenStorageService _tokenCache;
         private readonly IUserIdProvider _userIdProvider;
         private readonly IProxyRequestContext _proxyRequestContext;
 
         //private readonly ITokenService _tokenService;
 
-        public BasicOAuthBearerTokenHandler(TokenStorageService tokenCache, IUserIdProvider userIdProvider, IProxyRequestContext proxyRequestContext)//ITokenService tokenService)
+        public BasicOAuthBearerTokenHandler(ITokenStorageService tokenCache, IUserIdProvider userIdProvider, IProxyRequestContext proxyRequestContext)//ITokenService tokenService)
         {
             _tokenCache = tokenCache;
             _userIdProvider = userIdProvider;

@@ -1,4 +1,5 @@
-﻿using OAuthProxy.AspNetCore.Abstractions;
+﻿using Microsoft.Extensions.DependencyInjection;
+using OAuthProxy.AspNetCore.Abstractions;
 
 namespace OAuthProxy.AspNetCore.Configurations
 {
@@ -10,7 +11,7 @@ namespace OAuthProxy.AspNetCore.Configurations
         public string ThirdPartyClientConfigKey { get; set; } = "ThirdPartyClients";
         
         public int DefaultHttpClientTimeoutSeconds { get; set; } = 30;
-        public Type? UserIdProvider { get; internal set; }
+        public Action<IServiceCollection>? UserIdProvider { get; internal set; }
         internal List<IProxyClientBuilder> ProxyClientBuilders { get; } = [];
     }
 }

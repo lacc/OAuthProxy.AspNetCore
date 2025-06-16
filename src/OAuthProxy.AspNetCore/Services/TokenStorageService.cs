@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Data;
 using OAuthProxy.AspNetCore.Models;
 
 namespace OAuthProxy.AspNetCore.Services
 {
-    public class TokenStorageService
+    public class TokenStorageService : ITokenStorageService
     {
         private readonly TokenDbContext _dbContext;
 
@@ -69,7 +70,7 @@ namespace OAuthProxy.AspNetCore.Services
                 .ToListAsync();
         }
 
-        internal async Task<UserTokenDTO> RefreshTokenAsync(string userId, string serviceName, string refreshToken)
+        public async Task<UserTokenDTO> RefreshTokenAsync(string userId, string serviceName, string refreshToken)
         {
             throw new NotImplementedException();
         }
