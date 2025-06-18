@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OAuthProxy.AspNetCore.Apis;
 using OAuthProxy.AspNetCore.Demo;
+using OAuthProxy.AspNetCore.Demo.Apis;
 using OAuthProxy.AspNetCore.Demo.Services;
 using OAuthProxy.AspNetCore.Extensions;
 using Scalar.AspNetCore;
@@ -19,7 +20,8 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
             var sqlLiteConnectionString = builder.Configuration.GetConnectionString("SqliteConnection");
             if (!string.IsNullOrEmpty(sqlLiteConnectionString))
             {
-                dbOptions.UseSqlite(sqlLiteConnectionString);
+                dbOptions.UseSqlite(sqlLiteConnectionString, 
+                    b => b.MigrationsAssembly("OAuthProxy.AspNetCore"));
             }
             else
             {
@@ -81,7 +83,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapProxyClientEndpoints();
+app.MapProxyClientEndpoints()
+   .MapServiceAClientEndpoints();
 
 app.Run();
 

@@ -9,10 +9,14 @@
             _httpClient = httpClient;
         }
 
-        public string CallSomeMethod()
+        public async Task<string> CallSomeMethod()
         {
-            // Simulate a call to API
-            return "ServiceA API called successfully!";
+            var endpoint = "relative_path_to_base_url";
+            var response = await _httpClient.GetAsync(endpoint);
+            if (response.IsSuccessStatusCode)
+                return await response.Content.ReadAsStringAsync();
+            else
+                return string.Empty;
         }
     }
 }
