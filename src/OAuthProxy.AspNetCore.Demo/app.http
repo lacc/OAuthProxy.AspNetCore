@@ -3,14 +3,14 @@
 @authHeader=Basic dGVzdDp0ZXN0  
 
 
-GET {{OAuthProxy.AspNetCore_HostAddress}}/api/proxy/ServiceA/authorize
+GET {{OAuthProxy.AspNetCore_Demo_HostAddress}}/api/proxy/ServiceA/authorize
 X-Requested-With: XMLHttpRequest
 Authorization: {{authHeader}}
 
 ###
 # Endpoints mapped as * (all)
 @endpoint=test
-GET {{OAuthProxy.AspNetCore_HostAddress}}/api/proxy/ServiceA/{{endpoint}}
+GET {{OAuthProxy.AspNetCore_Demo_HostAddress}}/api/proxy/ServiceA/{{endpoint}}
 X-Requested-With: XMLHttpRequest
 Authorization: {{authHeader}}
 ###
