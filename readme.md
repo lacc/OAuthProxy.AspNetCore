@@ -1,5 +1,9 @@
 # OAuthProxy
 
+[![Build Status](https://github.com/lacc/OAuthProxy/actions/workflows/cicd_publish_nuget.yaml/badge.svg)](https://github.com/lacc/OAuthProxy/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#license)
+[![.NET](https://img.shields.io/badge/.NET-9.0%2B-blue)](https://dotnet.microsoft.com/)
+
 **OAuthProxy** is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy. It handles authorization, token storage, and state management, making it ideal for backend APIs that need to interact with multiple external OAuth providers without exposing sensitive credentials in client applications.
 
 ## Key Benefits
