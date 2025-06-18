@@ -9,6 +9,7 @@ namespace OAuthProxy.AspNetCore.Tests
 {
     public class AuthorizationStateServiceTest
     {
+        const char StateSeparator = '.';
         private static TokenDbContext CreateInMemoryDbContext()
         {
             var options = new DbContextOptionsBuilder<TokenDbContext>()
@@ -91,7 +92,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var service = CreateService(db, "user1");
 
             // Generate a valid-looking state, but not in DB
-            var fakeState = "id:1234567890:fakehmac";
+            var fakeState = $"id{StateSeparator}1234567890{StateSeparator}fakehmac";
             var result = await service.ValidateStateAsync("providerA", fakeState);
 
             Assert.NotNull(result.ErrorMessage);
@@ -123,7 +124,7 @@ namespace OAuthProxy.AspNetCore.Tests
 
             // expired state: expiresAt in the past
             var expiredAt = DateTimeOffset.UtcNow.AddMinutes(-20).ToUnixTimeSeconds();
-            var state = $"id:{expiredAt}:hmac";
+            var state = $"id{StateSeparator}{expiredAt}{StateSeparator}hmac";
             Assert.Throws<InvalidOperationException>(() => service.EnsureValidState("providerA", state));
         }
     }
