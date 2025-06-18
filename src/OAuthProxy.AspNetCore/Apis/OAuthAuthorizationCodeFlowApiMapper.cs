@@ -73,7 +73,7 @@ namespace OAuthProxy.AspNetCore.Apis
 
 
         private async Task<Results<Ok<string>, BadRequest<string>, UnauthorizedHttpResult>> CallbackHandler(
-            string code, string state, HttpRequest request, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService, TokenStorageService tokenStorage)
+            string code, string state, HttpRequest request, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService, ITokenStorageService tokenStorage)
         {
             stateService.EnsureValidState(ServiceProviderName, state);
             var stateValidationResult = await stateService.ValidateStateAsync(ServiceProviderName, state);

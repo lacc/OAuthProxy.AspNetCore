@@ -34,7 +34,7 @@ namespace OAuthProxy.AspNetCore.Apis
                 MapGenericApi(providerApi, provider.ServiceProviderName);
             }
 
-            return app;
+            return api;
         }
 
         private static void MapGenericApi(RouteGroupBuilder providerApi, string serviceProviderName)

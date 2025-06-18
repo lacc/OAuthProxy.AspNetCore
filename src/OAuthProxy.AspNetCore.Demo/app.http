@@ -1,6 +1,23 @@
-@OAuthProxy.AspNetCore.Demo_HostAddress = https://localhost:7135
-@src_HostAddress = http://localhost:5028
+@OAuthProxy.AspNetCore_Demo_HostAddress = https://localhost:7135
+#test@test
+@authHeader=Basic dGVzdDp0ZXN0  
 
 
+GET {{OAuthProxy.AspNetCore_Demo_HostAddress}}/api/proxy/ServiceA/authorize
+X-Requested-With: XMLHttpRequest
+Authorization: {{authHeader}}
 
+###
+# Endpoints mapped as * (all)
+@endpoint=test
+GET {{OAuthProxy.AspNetCore_Demo_HostAddress}}/api/proxy/ServiceA/{{endpoint}}
+X-Requested-With: XMLHttpRequest
+Authorization: {{authHeader}}
+###
+
+###
+# Custom Endpoint
+GET {{OAuthProxy.AspNetCore_Demo_HostAddress }}/api/proxy/ServiceA/proxy_endpoint
+X-Requested-With: XMLHttpRequest
+Authorization: {{authHeader}}
 ###

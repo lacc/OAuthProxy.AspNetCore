@@ -13,6 +13,7 @@ namespace OAuthProxy.AspNetCore.Services
     {
         const int ClockSkew = 60;
         const int StateExpirationMinutes = 10;
+        const char StateSeparator = '.';
         private readonly TokenDbContext _dbContext;
         private readonly ILogger<AuthorizationStateService> _logger;
         private readonly IUserIdProvider _userIdProvider;
@@ -33,8 +34,21 @@ namespace OAuthProxy.AspNetCore.Services
             }
 
             var state = await GenerateStateAsync(userId, thirdPartyProvider);
-            
-            var res = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(authorizeUrl, "state", state);
+
+            // Manually append the state parameter without encoding
+            var uri = new UriBuilder(authorizeUrl);
+            var query = uri.Query;
+            if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
+                query = query.Substring(1);
+
+            var queryParams = new List<string>();
+            if (!string.IsNullOrEmpty(query))
+                queryParams.AddRange(query.Split('&').Where(q => !q.StartsWith("state=")));
+
+            queryParams.Add($"state={System.Net.WebUtility.UrlEncode(state)}");
+            uri.Query = string.Join("&", queryParams);
+
+            var res = uri.ToString();
 
             return res;
         }
@@ -78,11 +92,11 @@ namespace OAuthProxy.AspNetCore.Services
             var nonce = Guid.NewGuid().ToString(); // For security
 
             expiresAt = DateTimeOffset.UtcNow.AddMinutes(StateExpirationMinutes).ToUnixTimeSeconds();
-            var stateData = $"{stateId}:{expiresAt}";
+            var stateData = $"{stateId}{StateSeparator}{expiresAt}";
 
             var hmac = ComputeHmac(stateData, stateSecret);
-            state = $"{stateData}:{hmac}";
-            // Format: stateId:hmac
+            state = $"{stateData}{StateSeparator}{hmac}";
+            // Format: stateId.hmac
 
             return stateId;
         }
@@ -90,13 +104,13 @@ namespace OAuthProxy.AspNetCore.Services
         public async Task<StatteValidationResult> ValidateStateAsync(string thirPartyProvider, string state)
         {
             //string stateSecret 
-            var parts = state.Split(':');
+            var parts = state.Split(StateSeparator);
             if (parts.Length != 3)
             {
                 _logger.LogError("Invalid state format");
                 return new StatteValidationResult
                 {
-                    ErrorMessage = "Invalid state format. Expected format: stateId:expiresAt:hmac"
+                    ErrorMessage = "Invalid state format. Expected format: stateId.expiresAt.hmac"
                 };
             }
 
@@ -119,7 +133,7 @@ namespace OAuthProxy.AspNetCore.Services
             var stateSecret = stateEntity.StateSecret;
 
             // Verify HMAC
-            var stateData = $"{stateId}:{expiresAtStr}";
+            var stateData = $"{stateId}{StateSeparator}{expiresAtStr}";
             var expectedHmac = ComputeHmac(stateData, stateSecret);
             if (providedHmac != expectedHmac)
             {
@@ -166,10 +180,10 @@ namespace OAuthProxy.AspNetCore.Services
             {
                 throw new ArgumentException("State cannot be null or empty.", nameof(state));
             }
-            var parts = state.Split(':');
+            var parts = state.Split(StateSeparator);
             if (parts.Length != 3)
             {
-                throw new ArgumentException("Invalid state format. Expected format: stateId:expiresAt:hmac", nameof(state));
+                throw new ArgumentException("Invalid state format. Expected format: stateId.expiresAt.hmac", nameof(state));
             }
             var stateId = parts[0];
             var expiresAtStr = parts[1];
