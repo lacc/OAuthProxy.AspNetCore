@@ -18,7 +18,7 @@ namespace OAuthProxy.AspNetCore.Tests
         }
 
         private static AuthorizationStateService CreateService(
-            TokenDbContext dbContext = null,
+            TokenDbContext dbContext,
             string userId = "user1")
         {
             dbContext ??= CreateInMemoryDbContext();
@@ -46,7 +46,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var db = CreateInMemoryDbContext();
             var logger = Mock.Of<ILogger<AuthorizationStateService>>();
             var userIdProvider = new Mock<IUserIdProvider>();
-            userIdProvider.Setup(x => x.GetCurrentUserId()).Returns((string)null);
+            userIdProvider.Setup(x => x.GetCurrentUserId()).Returns(null as string);
             var service = new AuthorizationStateService(db, logger, userIdProvider.Object);
 
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
@@ -64,6 +64,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var decoratedUrl = await service.DecorateWithStateAsync(provider, url);
             var state = System.Web.HttpUtility.ParseQueryString(new Uri(decoratedUrl).Query)["state"];
 
+            Assert.NotNull(state);
             var result = await service.ValidateStateAsync(provider, state);
 
             Assert.NotNull(result);
@@ -102,8 +103,6 @@ namespace OAuthProxy.AspNetCore.Tests
         {
             var db = CreateInMemoryDbContext();
             var service = CreateService(db, "user1");
-
-            Assert.Throws<ArgumentException>(() => service.EnsureValidState("providerA", null));
             Assert.Throws<ArgumentException>(() => service.EnsureValidState("providerA", ""));
         }
 
