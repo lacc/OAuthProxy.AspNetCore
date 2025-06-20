@@ -6,7 +6,13 @@ on:
       - main
     paths:
       - '**/src/**'
-
+permissions:
+  actions: write
+  contents: write
+  packages: write
+  attestations: write
+  pull-requests: write
+  
 jobs:
   build:
     runs-on: ubuntu-latest
