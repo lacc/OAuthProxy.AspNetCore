@@ -76,7 +76,7 @@ namespace OAuthProxy.AspNetCore.Apis
                 return TypedResults.Ok(authorizeUrl);
             }
 
-            return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with permanent status code
+            return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with temporary status code
         }
 
         private static async Task EnsurePersistedLocalRedirectUriAsync(string authorizeUrl, string? localRedirectUri, ILocalRedirectUrlProvider redirectUrlProvider)
