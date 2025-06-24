@@ -92,7 +92,7 @@ namespace OAuthProxy.AspNetCore.Apis
             var state = query["state"] ?? string.Empty;
             if (string.IsNullOrEmpty(state))
             {
-                //nothng to save to
+                //nothing to save to
                 return;
             }
 
