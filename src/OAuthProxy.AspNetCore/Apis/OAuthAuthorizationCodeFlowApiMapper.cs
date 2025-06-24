@@ -126,7 +126,7 @@ namespace OAuthProxy.AspNetCore.Apis
             await tokenStorage.SaveTokenAsync(userId, ServiceProviderName, 
                 token.AccessToken, token.RefreshToken ?? string.Empty, token.ExpiresAt);
 
-            var redirectUri = await HasPersistedLocalRedirectUriAsync(state, redirectUrlProvider);
+            var redirectUri = await GetPersistedLocalRedirectUriAsync(state, redirectUrlProvider);
             if(!string.IsNullOrEmpty(redirectUri))
             {
                 return TypedResults.Redirect(redirectUri, true, true); // Redirect with permanent status code
@@ -135,7 +135,7 @@ namespace OAuthProxy.AspNetCore.Apis
             return TypedResults.Ok("");
         }
 
-        private static async Task<string> HasPersistedLocalRedirectUriAsync(string? state, ILocalRedirectUrlProvider redirectUrlProvider)
+        private static async Task<string> GetPersistedLocalRedirectUriAsync(string? state, ILocalRedirectUrlProvider redirectUrlProvider)
         {
             var localRedirectUri = string.Empty;
 
