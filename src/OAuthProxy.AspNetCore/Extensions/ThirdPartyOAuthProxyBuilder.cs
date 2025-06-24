@@ -80,11 +80,11 @@ namespace OAuthProxy.AspNetCore.Extensions
 
         public void Build()
         {
+            _services.AddScoped<ILocalRedirectUrlProvider, LocalRedirectUrlProvider>();
             _services.AddScoped<IProxyRequestContext, ProxyRequestContext>();
             _services.AddScoped<AuthorizationFlowServiceFactory>();
             _services.AddScoped<IAuthorizationStateService, AuthorizationStateService>();
             _services.AddScoped< BasicOAuthBearerTokenHandler >();
-            //_services.AddScoped<OAuthProxyMiddleware>();
 
             if (BuilderOptions.UserIdProvider == null)
             {
