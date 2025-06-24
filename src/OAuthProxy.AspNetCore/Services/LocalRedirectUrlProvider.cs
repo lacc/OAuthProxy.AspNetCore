@@ -42,7 +42,7 @@ namespace OAuthProxy.AspNetCore.Services
             _dbContext.LocalRedirectUris.Add(redirectUrl);
             await _dbContext.SaveChangesAsync();
         }
-        public string GetPersistedUri(string authState)
+        public string GetPersistedUri(string authState, bool deleteAfterGet = true)
         {
             if (string.IsNullOrEmpty(authState))
             {
@@ -52,10 +52,16 @@ namespace OAuthProxy.AspNetCore.Services
                 .AsNoTracking()
                 .FirstOrDefault(s => s.AuthState == authState);
 
+            if (deleteAfterGet && stateEntity != null)
+            {
+                _dbContext.LocalRedirectUris.Remove(stateEntity);
+                _dbContext.SaveChanges();
+            }
+
             return stateEntity?.LocalRedirectUrl ?? string.Empty;
         }
 
-        public async Task<string> GetPersistedUriAsync(string authState)
+        public async Task<string> GetPersistedUriAsync(string authState, bool deleteAfterGet = true)
         {
             if (string.IsNullOrEmpty(authState))
             {
@@ -68,6 +74,13 @@ namespace OAuthProxy.AspNetCore.Services
             {
                 throw new InvalidOperationException($"No redirect URI found for auth state '{authState}'.");
             }
+
+            if (deleteAfterGet)
+            {
+                _dbContext.LocalRedirectUris.Remove(stateEntity);
+                await _dbContext.SaveChangesAsync();
+            }
+
             return stateEntity.LocalRedirectUrl;
         }
     }

@@ -87,6 +87,7 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
             var token = await db.OAuthTokens.FirstOrDefaultAsync();
             Assert.NotNull(token);
             Assert.Equal("access", token.AccessToken);
+            Assert.False(db.LocalRedirectUris.Any());
         }
 
         [Fact]
@@ -120,6 +121,8 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
             var token = await db.OAuthTokens.FirstOrDefaultAsync();
             Assert.NotNull(token);
             Assert.Equal("access", token.AccessToken);
+
+            Assert.False(db.LocalRedirectUris.Any());
         }
     }
 }
