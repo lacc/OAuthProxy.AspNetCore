@@ -6,6 +6,7 @@ namespace OAuthProxy.AspNetCore.Data
     {
         public DbSet<ThirdPartyTokenEntity> OAuthTokens { get; set; }
         internal DbSet<StateEntity> OAuthStates { get; set; }
+        internal DbSet<LocalRedirectUriEntity> LocalRedirectUris { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,6 +25,7 @@ namespace OAuthProxy.AspNetCore.Data
                 entity.Property(e => e.StateId).HasMaxLength(450);
                 entity.Property(e => e.ThirdPartyServiceProvider).HasMaxLength(100);
             });
+
         }
     }
 }

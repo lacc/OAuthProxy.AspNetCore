@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OAuthProxy.AspNetCore.Data;
 
@@ -10,9 +11,11 @@ using OAuthProxy.AspNetCore.Data;
 namespace OAuthProxy.AspNetCore.Migrations
 {
     [DbContext(typeof(TokenDbContext))]
-    partial class TokenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250624174713_AddLocalRedirectUriSupport")]
+    partial class AddLocalRedirectUriSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");

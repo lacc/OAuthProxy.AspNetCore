@@ -39,7 +39,7 @@ namespace OAuthProxy.AspNetCore.Services
             var uri = new UriBuilder(authorizeUrl);
             var query = uri.Query;
             if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
-                query = query.Substring(1);
+                query = query[1..];
 
             var queryParams = new List<string>();
             if (!string.IsNullOrEmpty(query))
