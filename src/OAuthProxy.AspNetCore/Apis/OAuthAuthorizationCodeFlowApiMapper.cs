@@ -86,7 +86,7 @@ namespace OAuthProxy.AspNetCore.Apis
                 return;
             }
 
-            // If a redirect_uri is provided, append it to the authorize URL
+            // If a redirect_uri is provided, persisting it to with state for later retrieval
             var uriBuilder = new UriBuilder(authorizeUrl);
             var query = HttpUtility.ParseQueryString(uriBuilder.Query);
             var state = query["state"] ?? string.Empty;
