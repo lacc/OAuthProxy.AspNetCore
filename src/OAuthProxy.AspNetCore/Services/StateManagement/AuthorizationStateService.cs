@@ -54,16 +54,26 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
             if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
                 query = query[1..];
 
-            var queryParams = new List<string>();
-            if (!string.IsNullOrEmpty(query))
-                queryParams.AddRange(query.Split('&').Where(q => !q.StartsWith("state=")));
+            var queryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(query);
+            var queryParams = new List<KeyValuePair<string, string>>();
 
-            queryParams.Add($"state={System.Net.WebUtility.UrlEncode(protectedState)}");
-            uri.Query = string.Join("&", queryParams);
+            foreach (var kvp in queryDict)
+            {
+                if (!string.Equals(kvp.Key, "state", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (var value in kvp.Value)
+                    {
+                        queryParams.Add(new KeyValuePair<string, string>(kvp.Key, value ?? string.Empty));
+                    }
+                }
+            }
+
+            queryParams.Add(new KeyValuePair<string, string>("state", System.Net.WebUtility.UrlEncode(protectedState)));
+            uri.Query = string.Join("&", queryParams.Select(kvp => $"{System.Net.WebUtility.UrlEncode(kvp.Key)}={System.Net.WebUtility.UrlEncode(kvp.Value)}"));
 
             var res = uri.ToString();
 
-            return Task.FromResult( res);
+            return Task.FromResult(res);
         }
         
         public Task<StateValidationResult> ValidateStateAsync(string thirdPartyProvider, string state)
