@@ -116,10 +116,10 @@ namespace OAuthProxy.AspNetCore.Apis
             return TypedResults.Ok("Success");
         }
 
-        private bool IsValidRedirectUri(string? redurectUri)
+        private bool IsValidRedirectUri(string? redirectUri)
         {
-            return !string.IsNullOrEmpty(redurectUri) &&
-                   Uri.TryCreate(redurectUri, UriKind.Absolute, out var _uri) &&
+            return !string.IsNullOrEmpty(redirectUri) &&
+                   Uri.TryCreate(redirectUri, UriKind.Absolute, out var _uri) &&
                     (_uri.Scheme == Uri.UriSchemeHttps ||
                    (_providerConfig.AllowHttpRedirects && _uri.Scheme == Uri.UriSchemeHttp));
         }
