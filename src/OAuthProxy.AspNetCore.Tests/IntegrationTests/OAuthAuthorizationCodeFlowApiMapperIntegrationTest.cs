@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using OAuthProxy.AspNetCore.Data;
 using OAuthProxy.AspNetCore.Extensions;
 using System.Net;
@@ -43,10 +43,13 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
                                     dbOptions.UseInMemoryDatabase("TestDb_" + "Test");
                             })
                             .AddOAuthServiceClient<TestProvider>("TestProvider", clientBuilder =>
+                            {
+                                clientBuilder.AllowHttpRedirects = true;
                                 clientBuilder.WithAuthorizationCodeFlow(
                                     context.Configuration.GetSection("ThirdPartyServices:TestProvider"),
                                     b => b.ConfigureTokenExchanger<DummyCodeExchanger>()
-                                )
+                                );
+                            }
                             )
                     );
                 });
@@ -66,7 +69,8 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
             var authorizeResp = await client.GetAsync($"/api/proxy/testprovider/authorize?local_redirect_uri={encodedRedirectUrl}");
             Assert.Equal(HttpStatusCode.TemporaryRedirect, authorizeResp.StatusCode);
 
-            var location = authorizeResp.Headers.Location.ToString();
+            var location = authorizeResp?.Headers?.Location?.ToString();
+            Assert.NotNull(location);
             Assert.Contains("state=", location);
 
             // Extract state from redirect URL
@@ -78,8 +82,8 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
             Assert.Equal(HttpStatusCode.PermanentRedirect, callbackResp.StatusCode);
 
             // Check that the redirect is to the local_redirect_uri
-            var callbackLocation = callbackResp.Headers.Location.ToString();
-            Assert.Equal("http://localhost/after", callbackLocation);
+            var callbackLocation = callbackResp?.Headers?.Location?.ToString();
+            Assert.Equal(localRedirectUrl, callbackLocation);
 
             // Check that token is saved in the db
             using var scope = _factory.Services.CreateScope();

@@ -107,13 +107,21 @@ namespace OAuthProxy.AspNetCore.Apis
             await tokenStorage.SaveTokenAsync(userId, ServiceProviderName, 
                 token.AccessToken, token.RefreshToken ?? string.Empty, token.ExpiresAt);
 
-            if(!string.IsNullOrEmpty(stateValidationResult?.StateParameters?.RedirectUrl))
+            var redirectUri = stateValidationResult?.StateParameters?.RedirectUrl ?? string.Empty;
+            if (IsValidRedirectUri(redirectUri))
             {
-                return TypedResults.Redirect(stateValidationResult.StateParameters.RedirectUrl, true, true); // Redirect with permanent status code
+                return TypedResults.Redirect(redirectUri, true, true); // Redirect with permanent status code
             }
 
             return TypedResults.Ok("Success");
         }
 
+        private bool IsValidRedirectUri(string? redurectUri)
+        {
+            return !string.IsNullOrEmpty(redurectUri) &&
+                   Uri.TryCreate(redurectUri, UriKind.Absolute, out var _uri) &&
+                    (_uri.Scheme == Uri.UriSchemeHttps ||
+                   (_providerConfig.AllowHttpRedirects && _uri.Scheme == Uri.UriSchemeHttp));
+        }
     }
 }

@@ -30,10 +30,7 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
                 throw new UnauthorizedAccessException("User is not authenticated. Cannot generate state.");
             }
 
-            if (parameters == null)
-            {
-                parameters = new AuthorizationStateParameters();
-            }
+            parameters ??= new AuthorizationStateParameters();
             if (string.IsNullOrEmpty(parameters.UserId))
             {
                 parameters.UserId = userId;
