@@ -73,8 +73,8 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
             try
             {
                 var protector = _dpProvider.CreateProtector($"OAuthState-{thirdPartyProvider}");
-                var parameters = protector.Unprotect(state);
-                stateData = JsonSerializer.Deserialize<AuthorizationStateParameters>(parameters);
+                var unprotectedData = protector.Unprotect(state);
+                stateData = JsonSerializer.Deserialize<AuthorizationStateParameters>(unprotectedData);
             }
             catch( Exception ex)
             {
