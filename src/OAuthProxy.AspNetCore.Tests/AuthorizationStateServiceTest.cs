@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Data;
-using OAuthProxy.AspNetCore.Services;
+using OAuthProxy.AspNetCore.Services.StateManagement;
 
 namespace OAuthProxy.AspNetCore.Tests
 {

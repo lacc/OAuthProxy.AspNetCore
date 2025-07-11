@@ -10,7 +10,7 @@
 ## Key Benefits
 
 - **Secure Token Management:** Stores access and refresh tokens securely using Entity Framework Core.
-- **CSRF Protection:** Built-in state management for secure authorization code flows.
+- **CSRF Protection:** Built-in state management for secure authorization flows using the dotnet DataProtection api.
 - **Pluggable Identity:** Supports JWT, custom user ID providers, or other identity mechanisms.
 - **Extensible Architecture:** Easily add new OAuth providers with minimal configuration.
 - **Server-Side Secrets:** Keeps OAuth client secrets safe on the server, away from client applications.
@@ -50,7 +50,7 @@
 
 ## Prerequisites
 
-- **.NET SDK 7.0 or later**
+- **.NET SDK 9.0 or later**
 - **Entity Framework Core** (matching your project’s version)
 - **Relational Database** (e.g., SQLite, SQL Server, PostgreSQL)
 - **OAuth Provider Account** (e.g., GitHub, Google) with client credentials
@@ -91,6 +91,7 @@ Follow these steps to set up and run the demo project:
    cd OAuthProxy.AspNetCore.Demo
    dotnet run
    ```
+  The default configuration uses SqlLite and db file with auto migration on startup.
 
 4. **Authenticate:**
    - Start the authentication process by calling:
@@ -130,6 +131,12 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
   {
     options.AutoMigration = true;
     options.DatabaseOptions = dbOptions => dbOptions.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection"));
+  })
+  .ConfigureDataProtector(builder =>
+  {
+      builder.SetApplicationName("OAuthProxy")
+          .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys")))
+          .SetDefaultKeyLifetime(TimeSpan.FromDays(60));
   })
   .AddOAuthServiceClient<GitHubClient>("ServiceA", clientBuilder => clientBuilder
     .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
@@ -184,6 +191,47 @@ app.UseAuthentication();
 - **Custom Identity:** Use `.WithUserIdProvider<T>()`.
 - **Custom Tokens:** Implement `IOAuthAuthorizationTokenExchanger`.
 
+## Configure the Library
+- Storage options
+  ```csharp
+  proxyBuilder
+    .WithTokenStorageOptions(options => 
+    {
+      options.AutoMigration = true;
+      options.DatabaseOptions = dbOptions => dbOptions.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection"));
+    })
+  ```
+    - Auto migration on startup: `options.AutoMigration` (default false)
+    - EF database configuration: `options.DatabaseOptions`
+- Configure dotnet [Data Protection](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/introduction)
+  ```csharp
+  proxyBuilder.ConfigureDataProtector(builder =>
+  {
+      builder
+          .SetApplicationName("OAuthProxy")
+          .PersistKeysToFileSystem(new DirectoryInfo(
+              Path.Combine(AppContext.BaseDirectory, "keys")))
+          .SetDefaultKeyLifetime(TimeSpan.FromDays(60));
+  })
+  ```
+- Custom User ID Provider
+  ```csharp
+  proxyBuilder.WithUserIdProvider<CustomUserIdProvider>()
+  ```
+  - The default user id provider uses claims to determine the user id (`sub` or `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier`)
+
+- Configure 3rd party service
+  ```csharp
+  proxyBuilder.AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
+    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
+    
+  proxyBuilder.AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => proxyClientBuilder
+    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
+    {
+        builder.ConfigureTokenExchanger<DummyCodeExchanger>();
+    }))
+  ```
+  - Optionally use `ConfigureTokenExchanger` to replace the default token exchanger service
 
 ## Example: Custom Endpoint with Minimal APIs
 Here’s how to create a custom endpoint using ASP.NET Core minimal APIs, which offers more control than the generic proxy:
@@ -211,9 +259,15 @@ By using custom endpoints, you gain greater flexibility and security compared to
 Update the database schema:
 
 ```sh
-dotnet ef database update -c TokenDbContext
+cd src\OAuthProxy.AspNetCore
+dotnet ef database update -c TokenDbContext -s ..\OAuthProxy.AspNetCore.Demo
 ```
 
+Adding new migrations:
+```sh
+cd src\OAuthProxy.AspNetCore
+dotnet ef migrations add initial -s ..\OAuthProxy.AspNetCore.Demo
+```
 ---
 
 ## Testing

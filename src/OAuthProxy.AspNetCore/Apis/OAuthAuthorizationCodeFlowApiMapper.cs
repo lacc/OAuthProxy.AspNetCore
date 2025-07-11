@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Services;
-using System.Web;
 
 namespace OAuthProxy.AspNetCore.Apis
 {
@@ -44,6 +43,7 @@ namespace OAuthProxy.AspNetCore.Apis
                 .WithDescription($"API endpoints for OAuth Proxy service: {serviceName}")
                 .WithName($"OAuthProxyAuthorizeApi_{serviceName}")
                 .RequireAuthorization();
+                //.AllowAnonymous();
 
             var callbackApi = app.MapGet(callbackUrl, CallbackHandler)
                 .WithDisplayName($"OAuth Proxy Callback API for {serviceName}")
@@ -54,7 +54,7 @@ namespace OAuthProxy.AspNetCore.Apis
             return app;
         }
         private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult>> HandleAuthorize(
-            [FromQuery(Name = LocalRedirectUriParameterName)] string? localRedirectUri, HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService, ILocalRedirectUrlProvider redirectUrlProvider)
+            [FromQuery(Name = LocalRedirectUriParameterName)] string? localRedirectUri, HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
         {
             var urlProvider = serviceFactory.GetAuthorizationUrlProvider(ServiceProviderName);
 
@@ -67,8 +67,6 @@ namespace OAuthProxy.AspNetCore.Apis
             var authorizeUrl = await urlProvider.GetAuthorizeUrlAsync(OAuthConfiguration, redirectUri);
             authorizeUrl = await stateService.DecorateWithStateAsync(ServiceProviderName, authorizeUrl);
             
-            await EnsurePersistedLocalRedirectUriAsync(authorizeUrl, localRedirectUri, redirectUrlProvider);
-
             if (httpRequest.Headers.TryGetValue("X-Requested-With", out Microsoft.Extensions.Primitives.StringValues value) &&
                 value == "XMLHttpRequest")
             {
@@ -79,30 +77,9 @@ namespace OAuthProxy.AspNetCore.Apis
             return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with temporary status code
         }
 
-        private static async Task EnsurePersistedLocalRedirectUriAsync(string authorizeUrl, string? localRedirectUri, ILocalRedirectUrlProvider redirectUrlProvider)
-        {
-            if(string.IsNullOrEmpty(localRedirectUri))
-            {
-                return;
-            }
-
-            // If a redirect_uri is provided, persisting it to with state for later retrieval
-            var uriBuilder = new UriBuilder(authorizeUrl);
-            var query = HttpUtility.ParseQueryString(uriBuilder.Query);
-            var state = query["state"] ?? string.Empty;
-            if (string.IsNullOrEmpty(state))
-            {
-                //nothing to save to
-                return;
-            }
-
-            await redirectUrlProvider.PersistUriAsync(state, localRedirectUri);
-        }
-
         private async Task<Results<Ok<string>, BadRequest<string>, UnauthorizedHttpResult, RedirectHttpResult>> CallbackHandler(
-            string code, string state, HttpRequest request, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService, ITokenStorageService tokenStorage, ILocalRedirectUrlProvider redirectUrlProvider)
+            string code, string state, HttpRequest request, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService, ITokenStorageService tokenStorage)
         {
-            stateService.EnsureValidState(ServiceProviderName, state);
             var stateValidationResult = await stateService.ValidateStateAsync(ServiceProviderName, state);
             if (!stateValidationResult?.IsValid ?? false)
             {
@@ -117,7 +94,7 @@ namespace OAuthProxy.AspNetCore.Apis
                 return TypedResults.BadRequest("Failed to exchange authorization code for access token.");
             }
 
-            var userId = stateValidationResult?.UserId;
+            var userId = stateValidationResult?.StateParameters?.UserId;
             if (string.IsNullOrEmpty(userId))
             {
                 return TypedResults.Unauthorized();
@@ -126,32 +103,13 @@ namespace OAuthProxy.AspNetCore.Apis
             await tokenStorage.SaveTokenAsync(userId, ServiceProviderName, 
                 token.AccessToken, token.RefreshToken ?? string.Empty, token.ExpiresAt);
 
-            var redirectUri = await GetPersistedLocalRedirectUriAsync(state, redirectUrlProvider);
-            if(!string.IsNullOrEmpty(redirectUri))
+            if(!string.IsNullOrEmpty(stateValidationResult?.StateParameters?.RedirectUrl))
             {
-                return TypedResults.Redirect(redirectUri, true, true); // Redirect with permanent status code
+                return TypedResults.Redirect(stateValidationResult.StateParameters.RedirectUrl, true, true); // Redirect with permanent status code
             }
 
-            return TypedResults.Ok("");
+            return TypedResults.Ok("Success");
         }
 
-        private static async Task<string> GetPersistedLocalRedirectUriAsync(string? state, ILocalRedirectUrlProvider redirectUrlProvider)
-        {
-            var localRedirectUri = string.Empty;
-
-            if (string.IsNullOrEmpty(state))
-            {
-                return localRedirectUri;
-            }
-
-            var redirectUri = await redirectUrlProvider.GetPersistedUriAsync(state);
-            if (string.IsNullOrEmpty(redirectUri))
-            {
-                return localRedirectUri;
-            }
-
-            localRedirectUri = redirectUri;
-            return localRedirectUri;
-        }
     }
 }

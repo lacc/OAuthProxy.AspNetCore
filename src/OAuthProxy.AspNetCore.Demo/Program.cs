@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OAuthProxy.AspNetCore.Apis;
@@ -29,13 +30,26 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
             }
         };
     })
+    .ConfigureDataProtector(builder =>
+    {
+        builder
+            .SetApplicationName("OAuthProxy")
+            .PersistKeysToFileSystem(new DirectoryInfo(
+                Path.Combine(AppContext.BaseDirectory, "keys")))
+            .SetDefaultKeyLifetime(TimeSpan.FromDays(60));
+    })
     .AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
         .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
-    .AddOAuthServiceClient<ThirdPartyClientA>("ServiceB", proxyClientBuilder => proxyClientBuilder
+    .AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => proxyClientBuilder
         .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
         {
             builder.ConfigureTokenExchanger<DummyCodeExchanger>();
         }))
+//.AddOAuthServiceClient<ThirdPartyClientA>("Nuk", proxyClientBuilder => proxyClientBuilder
+//    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA"), builder =>
+//    {
+//        builder.ConfigureTokenExchanger<DummyCodeExchanger>();
+//    }))
 );
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
