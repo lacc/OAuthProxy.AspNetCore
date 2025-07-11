@@ -22,7 +22,8 @@ jobs:
     # concurrency:
     #   group: staging_environment
     env:
-      MAJOR_MINOR: "2.1"  # Update this when you have breaking changes (major) or new features (minor)
+      MAJOR_MINOR: "2.2"  # Update this when you have breaking changes (major) or new features (minor)
+      PRERELEASE_LABEL: "alpha"  # Options: alpha, beta, preview, rc (release candidate)
       
     steps:
     - name: Checkout code
@@ -54,13 +55,26 @@ jobs:
           # For main branch, use the clean version
           VERSION="${MAIN_VERSION}"
         else
-          # For development branch, use main version + dev suffix + run ID
-          VERSION="${MAIN_VERSION}-dev-${{ github.run_id }}"
+          # For development branch, use semantic versioning pre-release format
+          # Get short commit SHA for uniqueness and traceability
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          # Use next patch version + configurable prerelease label + commit SHA
+          NEXT_PATCH=$((MAIN_PATCH_VERSION + 1))
+          DEV_VERSION="${{ env.MAJOR_MINOR }}.${NEXT_PATCH}-${{ env.PRERELEASE_LABEL }}.${COMMIT_SHA}"
+          VERSION="${DEV_VERSION}"
         fi
+        
+        # Safety check: ensure version is not empty
+        if [ -z "$VERSION" ]; then
+          echo "ERROR: Version calculation failed!"
+          exit 1
+        fi
+        
         echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
         echo "Calculated version: ${VERSION}"
         echo "Based on main version: ${MAIN_VERSION}"
-        
+        echo "Commit SHA: $(git rev-parse HEAD)"
+
     - name: Debug - Show current branch and files
       run: |
         echo "Current branch: $(git branch --show-current)"
