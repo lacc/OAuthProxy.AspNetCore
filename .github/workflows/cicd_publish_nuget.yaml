@@ -19,12 +19,9 @@ permissions:
   pull-requests: write
 
 env:
-  # Version Configuration
   MAJOR_MINOR: "2.2"  # Update this when you have breaking changes (major) or new features (minor)
   PRERELEASE_LABEL: "alpha"  # Options: alpha, beta, preview, rc (release candidate)
-  
-  # Publishing Configuration
-  PUBLISH_DEVELOPMENT: "true"  # Set to "false" to skip publishing for development branches
+  PUBLISH_DEVELOPMENT: "false"  # Set to "false" to skip publishing for development (non main) branches
   
 jobs:
   build:
