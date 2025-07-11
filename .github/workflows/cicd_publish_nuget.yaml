@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - development
     paths:
       - '**/src/**'
       - '.github/workflows/cicd_publish_nuget.yaml'
@@ -20,7 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     # concurrency:
     #   group: staging_environment
-
+    env:
+      MAJOR_MINOR: "2.1"  # Update this when you have breaking changes (major) or new features (minor)
+      
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -28,6 +31,22 @@ jobs:
         sparse-checkout: |
           .github
           src
+        fetch-depth: 0  # Fetch full history for version calculation
+          
+    - name: Calculate Version
+      id: version
+      run: |
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          # Count commits on main branch as patch version
+          PATCH_VERSION=$(git rev-list --count origin/main)
+          VERSION="${{ env.MAJOR_MINOR }}.${PATCH_VERSION}"
+        else
+          # For development branch, use commit count + run ID for uniqueness
+          PATCH_VERSION=$(git rev-list --count HEAD)
+          VERSION="${{ env.MAJOR_MINOR }}.${PATCH_VERSION}-dev-${{ github.run_id }}"
+        fi
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "Calculated version: ${VERSION}"
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
@@ -44,7 +63,7 @@ jobs:
       run: dotnet test --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory ./test-results/${{github.run_id}} $GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore.Tests/OAuthProxy.AspNetCore.Tests.csproj
     
     - name: Pack
-      run: dotnet pack "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" -p:PackageVersion=2.1.0-${{github.run_id}} --version-suffix "${{github.run_id}}"  --configuration Release --no-build --output ./publish
+      run: dotnet pack "$GITHUB_WORKSPACE/src/OAuthProxy.AspNetCore/OAuthProxy.AspNetCore.csproj" -p:PackageVersion=${{ steps.version.outputs.VERSION }} --configuration Release --no-build --output ./publish
 
     - name: Test Report
       uses: dorny/test-reporter@v2
