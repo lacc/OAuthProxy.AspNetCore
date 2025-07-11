@@ -10,10 +10,8 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
 {
     public class AuthorizationStateParameters
     {
-        [JsonPropertyName("userId")]
-        public string UserId { get; set; }
-        [JsonPropertyName("redirectUrl")]
-        public string RedirectUrl { get; set; }
+        public string? UserId { get; set; }
+        public string? RedirectUrl { get; set; }
 
         public Dictionary<string, string> ExtraParameters { get; set; } = [];
     }

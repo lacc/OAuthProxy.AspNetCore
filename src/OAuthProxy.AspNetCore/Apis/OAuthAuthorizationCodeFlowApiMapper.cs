@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Services;
+using OAuthProxy.AspNetCore.Services.StateManagement;
 
 namespace OAuthProxy.AspNetCore.Apis
 {
@@ -65,7 +66,10 @@ namespace OAuthProxy.AspNetCore.Apis
             }
         
             var authorizeUrl = await urlProvider.GetAuthorizeUrlAsync(OAuthConfiguration, redirectUri);
-            authorizeUrl = await stateService.DecorateWithStateAsync(ServiceProviderName, authorizeUrl);
+            authorizeUrl = await stateService.DecorateWithStateAsync(ServiceProviderName, authorizeUrl, new AuthorizationStateParameters
+            {
+                 RedirectUrl = localRedirectUri
+            });
             
             if (httpRequest.Headers.TryGetValue("X-Requested-With", out Microsoft.Extensions.Primitives.StringValues value) &&
                 value == "XMLHttpRequest")

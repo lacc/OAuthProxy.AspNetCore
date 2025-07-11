@@ -10,7 +10,6 @@
     <Compile Remove="Abstractions\ILocalRedirectUrlProvider.cs" />
     <Compile Remove="Handlers\OAuthProxyMiddleware.cs" />
     <Compile Remove="Services\LocalRedirectUrlProvider.cs" />
-    <Compile Remove="Services\StateManagement\AuthorizationStateService.cs" />
     <Compile Remove="Services\TokenCacheService.cs" />
   </ItemGroup>
   
