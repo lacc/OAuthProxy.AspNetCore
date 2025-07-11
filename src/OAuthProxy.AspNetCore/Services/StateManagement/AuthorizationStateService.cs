@@ -40,9 +40,18 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
                 parameters.UserId = userId;
             }
 
-            var protector = _dpProvider.CreateProtector("OAuthState");
-            var stateData = JsonSerializer.Serialize(parameters);
-            var protectedState = protector.Protect(stateData);
+            string? protectedState;
+            try
+            {
+                var protector = _dpProvider.CreateProtector("OAuthState");
+                var stateData = JsonSerializer.Serialize(parameters);
+                protectedState = protector.Protect(stateData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to protect state data");
+                throw new InvalidOperationException("Failed to generate state data.", ex);
+            }
 
             // Manually append the state parameter without encoding
             var uri = new UriBuilder(authorizeUrl);
@@ -64,10 +73,23 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
         
         public Task<StatteValidationResult> ValidateStateAsync(string thirPartyProvider, string state)
         {
-            var protector = _dpProvider.CreateProtector("OAuthState");
-            var parameters = protector.Unprotect(state);
-            var stateData = JsonSerializer.Deserialize<AuthorizationStateParameters>(parameters);
-            
+            AuthorizationStateParameters? stateData;
+
+            try
+            {
+                var protector = _dpProvider.CreateProtector("OAuthState");
+                var parameters = protector.Unprotect(state);
+                stateData = JsonSerializer.Deserialize<AuthorizationStateParameters>(parameters);
+            }
+            catch( Exception ex)
+            {
+                _logger.LogError(ex, "Failed to unprotect state data");
+                return Task.FromResult(new StatteValidationResult
+                {
+                    ErrorMessage = "Invalid state data."
+                });
+            }
+
             if (stateData == null)
             {
                 _logger.LogError("Failed to deserialize state data");
