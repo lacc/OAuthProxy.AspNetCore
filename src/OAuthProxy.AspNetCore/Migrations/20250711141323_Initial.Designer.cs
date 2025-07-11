@@ -11,61 +11,14 @@ using OAuthProxy.AspNetCore.Data;
 namespace OAuthProxy.AspNetCore.Migrations
 {
     [DbContext(typeof(TokenDbContext))]
-    [Migration("20250624174713_AddLocalRedirectUriSupport")]
-    partial class AddLocalRedirectUriSupport
+    [Migration("20250711141323_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
-
-            modelBuilder.Entity("OAuthProxy.AspNetCore.Data.LocalRedirectUriEntity", b =>
-                {
-                    b.Property<string>("AuthState")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LocalRedirectUrl")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("AuthState");
-
-                    b.ToTable("LocalRedirectUris");
-                });
-
-            modelBuilder.Entity("OAuthProxy.AspNetCore.Data.StateEntity", b =>
-                {
-                    b.Property<string>("StateId")
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StateSecret")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ThirdPartyServiceProvider")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("StateId");
-
-                    b.HasIndex("StateId", "ThirdPartyServiceProvider")
-                        .IsUnique();
-
-                    b.ToTable("OAuthStates");
-                });
 
             modelBuilder.Entity("OAuthProxy.AspNetCore.Data.ThirdPartyTokenEntity", b =>
                 {

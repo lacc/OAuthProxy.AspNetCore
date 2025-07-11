@@ -42,7 +42,7 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
             string? protectedState;
             try
             {
-                var protector = _dpProvider.CreateProtector("OAuthState");
+                var protector = _dpProvider.CreateProtector($"OAuthState-{thirdPartyProvider}");
                 var stateData = JsonSerializer.Serialize(parameters);
                 protectedState = protector.Protect(stateData);
             }
@@ -75,7 +75,7 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
 
             try
             {
-                var protector = _dpProvider.CreateProtector("OAuthState");
+                var protector = _dpProvider.CreateProtector($"OAuthState-{thirdPartyProvider}");
                 var parameters = protector.Unprotect(state);
                 stateData = JsonSerializer.Deserialize<AuthorizationStateParameters>(parameters);
             }

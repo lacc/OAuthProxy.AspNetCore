@@ -100,7 +100,7 @@ namespace OAuthProxy.AspNetCore.Tests
             Assert.Contains("state=", resultUrl);
 
             // Extract state from URL
-            var state = System.Web.HttpUtility.ParseQueryString(new Uri(resultUrl).Query)["state"];
+            var state = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(new Uri(resultUrl).Query)["state"];
             Assert.False(string.IsNullOrEmpty(state));
 
             // Validate state
