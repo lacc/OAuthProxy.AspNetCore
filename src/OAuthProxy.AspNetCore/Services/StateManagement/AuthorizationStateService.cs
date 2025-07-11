@@ -68,8 +68,8 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
                 }
             }
 
-            queryParams.Add(new KeyValuePair<string, string>("state", System.Net.WebUtility.UrlEncode(protectedState)));
-            uri.Query = string.Join("&", queryParams.Select(kvp => $"{System.Net.WebUtility.UrlEncode(kvp.Key)}={System.Net.WebUtility.UrlEncode(kvp.Value)}"));
+            queryParams.Add(new KeyValuePair<string, string>("state", protectedState));
+            uri.Query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(string.Empty, queryParams);
 
             var res = uri.ToString();
 
