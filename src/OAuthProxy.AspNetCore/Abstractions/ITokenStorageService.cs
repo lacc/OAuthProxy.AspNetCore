@@ -9,7 +9,7 @@ namespace OAuthProxy.AspNetCore.Abstractions
     {
         Task<List<string>> GetConnectedServicesAsync(string userId);
         Task<UserTokenDTO?> GetTokenAsync(string userId, string serviceName);
-        Task<UserTokenDTO> RefreshTokenAsync(string userId, string serviceName, string refreshToken);
+        Task<UserTokenDTO?> RefreshTokenAsync(string userId, string serviceName, string refreshToken);
         Task SaveTokenAsync(string userId, string serviceName, string accessToken, string refreshToken, DateTime expiry);
     }
 }

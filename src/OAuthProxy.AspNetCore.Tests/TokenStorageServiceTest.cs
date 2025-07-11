@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Moq;
+using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Data;
 using OAuthProxy.AspNetCore.Services;
 
@@ -18,7 +20,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task SaveTokenAsync_AddsAndUpdatesToken()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var userId = "user1";
             var serviceName = "providerA";
             var accessToken = "token1";
@@ -49,7 +51,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task GetTokenAsync_ReturnsUserTokenDTO_IfExists()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var userId = "user2";
             var serviceName = "providerB";
             var accessToken = "tokenX";
@@ -71,7 +73,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task GetTokenAsync_ReturnsNull_IfNotExists()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var dto = await service.GetTokenAsync("no-user", "no-service");
             Assert.Null(dto);
         }
@@ -80,7 +82,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task DeleteTokenAsync_RemovesToken()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var userId = "user3";
             var serviceName = "providerC";
             var accessToken = "tokenY";
@@ -98,7 +100,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task GetConnectedServicesAsync_ReturnsActiveServices()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var userId = "user4";
             var now = DateTime.UtcNow;
 

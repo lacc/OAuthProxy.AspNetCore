@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OAuthProxy.AspNetCore.Abstractions;
+using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Data;
 using OAuthProxy.AspNetCore.Models;
 
@@ -8,10 +10,12 @@ namespace OAuthProxy.AspNetCore.Services
     public class TokenStorageService : ITokenStorageService
     {
         private readonly TokenDbContext _dbContext;
+        private readonly IRefreshTokenService _refreshTokenService;
 
-        public TokenStorageService(TokenDbContext dbContext)
+        public TokenStorageService(TokenDbContext dbContext, IRefreshTokenService refreshTokenService)
         {
             _dbContext = dbContext;
+            _refreshTokenService = refreshTokenService;
         }
 
         public async Task SaveTokenAsync(string userId, string serviceName, string accessToken, string refreshToken, DateTime expiry)
@@ -70,9 +74,20 @@ namespace OAuthProxy.AspNetCore.Services
                 .ToListAsync();
         }
 
-        public async Task<UserTokenDTO> RefreshTokenAsync(string userId, string serviceName, string refreshToken)
+        public async Task<UserTokenDTO?> RefreshTokenAsync(string userId, string serviceName, string refreshToken)
         {
-            throw new NotImplementedException();
+            var refreshedToken = await _refreshTokenService.RefreshTokenAsync(
+                serviceName, refreshToken);
+
+            if (refreshedToken == null)
+            {
+                return null;
+            }
+
+            await SaveTokenAsync(userId, serviceName,
+                refreshedToken.AccessToken, refreshedToken.RefreshToken ?? string.Empty, DateTime.UtcNow.AddSeconds(refreshedToken.ExpiresIn));
+
+            return await GetTokenAsync(userId, serviceName);
         }
     }
 }

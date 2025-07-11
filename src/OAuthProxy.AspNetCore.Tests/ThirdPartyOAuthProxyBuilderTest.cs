@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Data;
 using OAuthProxy.AspNetCore.Extensions;
@@ -37,6 +38,8 @@ namespace OAuthProxy.AspNetCore.Tests
                 dbOptionsCalled = true;
                 opt.AutoMigration = false;
             });
+
+            services.AddScoped(sp => new Mock<IRefreshTokenService>().Object);
 
             var provider = services.BuildServiceProvider();
             Assert.True(dbOptionsCalled);
