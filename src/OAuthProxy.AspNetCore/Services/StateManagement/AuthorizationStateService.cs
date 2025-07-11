@@ -12,14 +12,14 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
     {
         private readonly ILogger<AuthorizationStateService> _logger;
         private readonly IUserIdProvider _userIdProvider;
-        private readonly IDataProtectionProvider _dpProvider;
+        private readonly IDataProtectionProvider _dataProtectionProvider;
 
         public AuthorizationStateService( ILogger<AuthorizationStateService> logger,
-            IUserIdProvider userIdProvider, IDataProtectionProvider dpProvider)
+            IUserIdProvider userIdProvider, IDataProtectionProvider dataProtectionProvider)
         {
             _logger = logger;
             _userIdProvider = userIdProvider;
-            _dpProvider = dpProvider;
+            _dataProtectionProvider = dataProtectionProvider;
         }
 
         public Task<string> DecorateWithStateAsync(string thirdPartyProvider, string authorizeUrl, AuthorizationStateParameters? parameters = null)
