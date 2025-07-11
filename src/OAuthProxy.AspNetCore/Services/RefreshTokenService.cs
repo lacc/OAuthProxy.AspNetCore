@@ -39,7 +39,7 @@ namespace OAuthProxy.AspNetCore.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to refresh token for service '{ServiceName}' with refresh token '{RefreshToken}'.", serviceName, refreshToken);
+                _logger.LogError(ex, "Failed to refresh token for service '{ServiceName}'.", serviceName);
                 return null;
             }
         }
