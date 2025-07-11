@@ -1,4 +1,3 @@
-﻿using Castle.Core.Logging;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
