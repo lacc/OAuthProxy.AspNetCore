@@ -2,11 +2,6 @@
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OAuthProxy.AspNetCore.Services
 {
