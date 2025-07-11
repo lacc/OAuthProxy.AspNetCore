@@ -60,6 +60,11 @@ jobs:
         echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
         echo "Calculated version: ${VERSION}"
         echo "Based on main version: ${MAIN_VERSION}"
+        
+    - name: Debug - Show current branch and files
+      run: |
+        echo "Current branch: $(git branch --show-current)"
+        echo "Current commit: $(git rev-parse HEAD)"
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
