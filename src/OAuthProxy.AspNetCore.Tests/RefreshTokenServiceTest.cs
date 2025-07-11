@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using OAuthProxy.AspNetCore.Abstractions;
@@ -37,8 +38,8 @@ namespace OAuthProxy.AspNetCore.Tests
             services.AddKeyedScoped<IOAuthAuthorizationRefreshTokenExchanger>(
                 serviceName, (sp, o) => mockExchanger.Object);
             var mockFactory = new AuthorizationFlowServiceFactory(services.BuildServiceProvider());
-            
-            var service = new RefreshTokenService(mockFactory, mockOptions.Object);
+            var logger = new Mock<ILogger<RefreshTokenService>>().Object;
+            var service = new RefreshTokenService(logger, mockFactory, mockOptions.Object);
 
             var result = await service.RefreshTokenAsync(serviceName, refreshToken);
 
@@ -57,8 +58,8 @@ namespace OAuthProxy.AspNetCore.Tests
             mockOptions.Setup(x => x.Get(serviceName)).Returns((ThirdPartyProviderConfig?)null);
 
             var mockFactory = new Mock<AuthorizationFlowServiceFactory>(MockBehavior.Strict, new object[] { null! });
-
-            var service = new RefreshTokenService(mockFactory.Object, mockOptions.Object);
+            var logger = new Mock<ILogger<RefreshTokenService>>().Object;
+            var service = new RefreshTokenService(logger, mockFactory.Object, mockOptions.Object);
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 service.RefreshTokenAsync(serviceName, refreshToken));
@@ -88,8 +89,9 @@ namespace OAuthProxy.AspNetCore.Tests
                 serviceName, (sp, o) => mockExchanger.Object);
             
             var mockFactory = new AuthorizationFlowServiceFactory(services.BuildServiceProvider());
-            
-            var service = new RefreshTokenService(mockFactory, mockOptions.Object);
+            var logger = new Mock<ILogger<RefreshTokenService>>().Object;
+
+            var service = new RefreshTokenService(logger, mockFactory, mockOptions.Object);
 
             var result = await service.RefreshTokenAsync(serviceName, refreshToken);
 
