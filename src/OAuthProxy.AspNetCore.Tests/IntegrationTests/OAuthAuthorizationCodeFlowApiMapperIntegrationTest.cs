@@ -60,6 +60,42 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
             {
                 AllowAutoRedirect = false
             });
+            var localRedirectUrl = "http://localhost/after";
+            var encodedRedirectUrl = System.Web.HttpUtility.UrlEncode(localRedirectUrl);
+            // Act: Call /oauth/{provider}/authorize?local_redirect_uri=...
+            var authorizeResp = await client.GetAsync($"/api/proxy/testprovider/authorize?local_redirect_uri={encodedRedirectUrl}");
+            Assert.Equal(HttpStatusCode.TemporaryRedirect, authorizeResp.StatusCode);
+
+            var location = authorizeResp.Headers.Location.ToString();
+            Assert.Contains("state=", location);
+
+            // Extract state from redirect URL
+            var state = System.Web.HttpUtility.ParseQueryString(new Uri(location).Query)["state"];
+            Assert.False(string.IsNullOrEmpty(state));
+
+            // Simulate callback
+            var callbackResp = await client.GetAsync($"/api/proxy/testprovider/callback?code=thecode&state={state}");
+            Assert.Equal(HttpStatusCode.PermanentRedirect, callbackResp.StatusCode);
+
+            // Check that the redirect is to the local_redirect_uri
+            var callbackLocation = callbackResp.Headers.Location.ToString();
+            Assert.Equal("http://localhost/after", callbackLocation);
+
+            // Check that token is saved in the db
+            using var scope = _factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<TokenDbContext>();
+            var token = await db.OAuthTokens.FirstOrDefaultAsync();
+            Assert.NotNull(token);
+            Assert.Equal("access", token.AccessToken);
+        }
+
+        [Fact]
+        public async Task Authorize_WithoutLocalRedirectUri_And_Callback_FullFlow()
+        {
+            var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false
+            });
 
             // Act: Call /oauth/{provider}/authorize without local_redirect_uri
             client.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
@@ -84,6 +120,7 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
             var token = await db.OAuthTokens.FirstOrDefaultAsync();
             Assert.NotNull(token);
             Assert.Equal("access", token.AccessToken);
+
         }
     }
 }
