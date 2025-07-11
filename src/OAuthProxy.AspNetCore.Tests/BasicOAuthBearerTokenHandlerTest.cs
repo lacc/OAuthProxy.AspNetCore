@@ -1,8 +1,11 @@
-﻿using Moq;
+﻿using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Moq.Protected;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Handlers;
 using OAuthProxy.AspNetCore.Models;
+using OAuthProxy.AspNetCore.Services.StateManagement;
 using System.Net;
 
 namespace OAuthProxy.AspNetCore.Tests
@@ -22,8 +25,8 @@ namespace OAuthProxy.AspNetCore.Tests
                     ItExpr.IsAny<HttpRequestMessage>(),
                     ItExpr.IsAny<CancellationToken>())
                 .ReturnsAsync(innerResponse ?? new HttpResponseMessage(HttpStatusCode.OK));
-
-            var handler = new BasicOAuthBearerTokenHandler(tokenService, userIdProvider, proxyRequestContext)
+            var logger = new Mock<ILogger<BasicOAuthBearerTokenHandler>>();
+            var handler = new BasicOAuthBearerTokenHandler(tokenService, userIdProvider, proxyRequestContext, logger.Object)
             {
                 InnerHandler = innerHandler.Object
             };

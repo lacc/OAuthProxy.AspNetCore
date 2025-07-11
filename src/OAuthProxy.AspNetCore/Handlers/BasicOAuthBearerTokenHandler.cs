@@ -1,4 +1,5 @@
-﻿using OAuthProxy.AspNetCore.Abstractions;
+﻿using Microsoft.Extensions.Logging;
+using OAuthProxy.AspNetCore.Abstractions;
 using System.Net.Http.Headers;
 
 namespace OAuthProxy.AspNetCore.Handlers
