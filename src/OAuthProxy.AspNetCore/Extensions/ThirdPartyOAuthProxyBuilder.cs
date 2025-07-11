@@ -1,10 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Data;
 using OAuthProxy.AspNetCore.Handlers;
 using OAuthProxy.AspNetCore.Services;
+using OAuthProxy.AspNetCore.Services.StateManagement;
 using OAuthProxy.AspNetCore.Services.UserServices;
 
 namespace OAuthProxy.AspNetCore.Extensions
@@ -55,7 +57,21 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             return this;
         }
+        public ThirdPartyOAuthProxyBuilder ConfigureDataProtector(Action<IDataProtectionBuilder> builder)
+        {
+            var dataProtectorBuilder = _services.AddDataProtection();
+            builder.Invoke(dataProtectorBuilder);
 
+            return this;
+        }
+        public ThirdPartyOAuthProxyBuilder ConfigureDefaultDataProtector()
+        {
+            _services.AddDataProtection()
+                .SetApplicationName("OAuthProxyDemo")
+                .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys")))
+                .SetDefaultKeyLifetime(TimeSpan.FromDays(60));
+            return this;
+        }
         public ThirdPartyOAuthProxyBuilder AddOAuthServiceClient<TServiceClient>(string serviceProviderName, Action<ProxyClientBuilder<TServiceClient>>? clientBuilderAction = null)
             where TServiceClient : class
         {
@@ -80,7 +96,6 @@ namespace OAuthProxy.AspNetCore.Extensions
 
         public void Build()
         {
-            _services.AddScoped<ILocalRedirectUrlProvider, LocalRedirectUrlProvider>();
             _services.AddScoped<IProxyRequestContext, ProxyRequestContext>();
             _services.AddScoped<AuthorizationFlowServiceFactory>();
             _services.AddScoped<IAuthorizationStateService, AuthorizationStateService>();

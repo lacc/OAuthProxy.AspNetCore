@@ -1,11 +1,10 @@
-﻿using OAuthProxy.AspNetCore.Models;
+﻿using OAuthProxy.AspNetCore.Services.StateManagement;
 
 namespace OAuthProxy.AspNetCore.Abstractions
 {
     internal interface IAuthorizationStateService
     {
-        Task<string> DecorateWithStateAsync(string thirdPartyProvider, string authorizeUrl);
-        void EnsureValidState(string serviceProviderName, string state);
-        Task<StatteValidationResult> ValidateStateAsync(string thirPartyProvider, string state);
+        Task<string> DecorateWithStateAsync(string thirdPartyProvider, string authorizeUrl, AuthorizationStateParameters? parameters = null);
+        Task<StateValidationResult> ValidateStateAsync(string thirdPartyProvider, string state);
     }
 }

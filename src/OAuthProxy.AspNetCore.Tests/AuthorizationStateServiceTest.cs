@@ -1,39 +1,30 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Data;
-using OAuthProxy.AspNetCore.Services;
+using OAuthProxy.AspNetCore.Services.StateManagement;
 
 namespace OAuthProxy.AspNetCore.Tests
 {
     public class AuthorizationStateServiceTest
     {
-        const char StateSeparator = '.';
-        private static TokenDbContext CreateInMemoryDbContext()
-        {
-            var options = new DbContextOptionsBuilder<TokenDbContext>()
-                .UseInMemoryDatabase(Guid.NewGuid().ToString())
-                .Options;
-            return new TokenDbContext(options);
-        }
-
         private static AuthorizationStateService CreateService(
-            TokenDbContext dbContext,
             string userId = "user1")
         {
-            dbContext ??= CreateInMemoryDbContext();
+            //dbContext ??= CreateInMemoryDbContext();
             var logger = new Mock<ILogger<AuthorizationStateService>>();
             var userIdProvider = new Mock<IUserIdProvider>();
             userIdProvider.Setup(x => x.GetCurrentUserId()).Returns(userId);
-            return new AuthorizationStateService(dbContext, logger.Object, userIdProvider.Object);
+            var dataProtectionProvider = DataProtectionProvider.Create("UnitTestPurpose");
+            return new AuthorizationStateService(logger.Object, userIdProvider.Object, dataProtectionProvider);
         }
 
         [Fact]
         public async Task DecorateWithStateAsync_AppendsStateToUrl()
         {
-            var db = CreateInMemoryDbContext();
-            var service = CreateService(db, "user1");
+            var service = CreateService("user1");
             var url = "https://example.com/auth?client_id=abc";
             
             var result = await service.DecorateWithStateAsync("providerA", url);
@@ -44,11 +35,12 @@ namespace OAuthProxy.AspNetCore.Tests
         [Fact]
         public async Task DecorateWithStateAsync_ThrowsIfUserIdMissing()
         {
-            var db = CreateInMemoryDbContext();
             var logger = Mock.Of<ILogger<AuthorizationStateService>>();
             var userIdProvider = new Mock<IUserIdProvider>();
             userIdProvider.Setup(x => x.GetCurrentUserId()).Returns(null as string);
-            var service = new AuthorizationStateService(db, logger, userIdProvider.Object);
+            var dataProtectionProvider = DataProtectionProvider.Create("UnitTestPurpose");
+
+            var service = new AuthorizationStateService(logger, userIdProvider.Object, dataProtectionProvider);
 
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
                 service.DecorateWithStateAsync("providerA", "https://example.com"));
@@ -57,8 +49,7 @@ namespace OAuthProxy.AspNetCore.Tests
         [Fact]
         public async Task ValidateStateAsync_ReturnsUserId_OnValidState()
         {
-            var db = CreateInMemoryDbContext();
-            var service = CreateService(db, "user1");
+            var service = CreateService("user1");
             var url = "https://example.com/auth?client_id=abc";
             var provider = "providerA";
 
@@ -68,64 +59,57 @@ namespace OAuthProxy.AspNetCore.Tests
             Assert.NotNull(state);
             var result = await service.ValidateStateAsync(provider, state);
 
-            Assert.NotNull(result);
-            Assert.Equal("user1", result.UserId);
+            Assert.True(result.IsValid);
+            Assert.NotNull(result?.StateParameters);
+            Assert.Equal("user1", result.StateParameters.UserId);
             Assert.Null(result.ErrorMessage);
         }
 
         [Fact]
         public async Task ValidateStateAsync_ReturnsError_OnInvalidFormat()
         {
-            var db = CreateInMemoryDbContext();
-            var service = CreateService(db, "user1");
+            var service = CreateService("user1");
 
             var result = await service.ValidateStateAsync("providerA", "badstateformat");
 
             Assert.NotNull(result.ErrorMessage);
-            Assert.Contains("Invalid state format", result.ErrorMessage);
+            Assert.Contains("Invalid state", result.ErrorMessage);
         }
 
         [Fact]
-        public async Task ValidateStateAsync_ReturnsError_OnNotFound()
+        public async Task DecorateWithStateAsync_AppendsProtectedState_And_CanBeValidated()
         {
-            var db = CreateInMemoryDbContext();
-            var service = CreateService(db, "user1");
+            // Arrange
+            var userId = "test-user";
 
-            // Generate a valid-looking state, but not in DB
-            var fakeState = $"id{StateSeparator}1234567890{StateSeparator}fakehmac";
-            var result = await service.ValidateStateAsync("providerA", fakeState);
+            var logger = new Mock<ILogger<AuthorizationStateService>>();
+            var userIdProvider = new Mock<IUserIdProvider>();
+            userIdProvider.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            var dataProtectionProvider = DataProtectionProvider.Create("UnitTestPurpose");
+            var service = new AuthorizationStateService(
+                logger.Object, userIdProvider.Object, dataProtectionProvider);
 
-            Assert.NotNull(result.ErrorMessage);
-            Assert.Contains("not found", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
-        }
+            var url = "https://example.com/auth?client_id=abc";
+            var redirectUrl = "https://example.com/redirect";
 
-        [Fact]
-        public void EnsureValidState_Throws_OnNullOrEmpty()
-        {
-            var db = CreateInMemoryDbContext();
-            var service = CreateService(db, "user1");
-            Assert.Throws<ArgumentException>(() => service.EnsureValidState("providerA", ""));
-        }
+            // Act
+            var resultUrl = await service.DecorateWithStateAsync("providerA", url, new AuthorizationStateParameters
+            {
+                RedirectUrl = redirectUrl
+            });
+            Assert.Contains("state=", resultUrl);
 
-        [Fact]
-        public void EnsureValidState_Throws_OnInvalidFormat()
-        {
-            var db = CreateInMemoryDbContext();
-            var service = CreateService(db, "user1");
+            // Extract state from URL
+            var state = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(new Uri(resultUrl).Query)["state"];
+            Assert.False(string.IsNullOrEmpty(state));
 
-            Assert.Throws<ArgumentException>(() => service.EnsureValidState("providerA", "badstate"));
-        }
-
-        [Fact]
-        public void EnsureValidState_Throws_OnExpiredState()
-        {
-            var db = CreateInMemoryDbContext();
-            var service = CreateService(db, "user1");
-
-            // expired state: expiresAt in the past
-            var expiredAt = DateTimeOffset.UtcNow.AddMinutes(-20).ToUnixTimeSeconds();
-            var state = $"id{StateSeparator}{expiredAt}{StateSeparator}hmac";
-            Assert.Throws<InvalidOperationException>(() => service.EnsureValidState("providerA", state));
+            // Validate state
+            var validation = await service.ValidateStateAsync("providerA", state!);
+            Assert.NotNull(validation);
+            Assert.Null(validation.ErrorMessage);
+            Assert.NotNull(validation.StateParameters);
+            Assert.Equal(userId, validation.StateParameters.UserId);
+            Assert.Equal(redirectUrl, validation.StateParameters.RedirectUrl);
         }
     }
 }

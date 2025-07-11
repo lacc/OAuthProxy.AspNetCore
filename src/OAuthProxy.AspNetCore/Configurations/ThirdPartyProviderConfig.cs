@@ -4,5 +4,6 @@
     {
         public string? ServiceProviderName { get; internal set; }
         public ThirdPartyServiceConfig? OAuthConfiguration { get; internal set; }
+        public bool AllowHttpRedirects { get; internal set; }
     }
 }

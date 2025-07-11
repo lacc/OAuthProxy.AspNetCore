@@ -18,6 +18,7 @@ namespace OAuthProxy.AspNetCore.Extensions
         private readonly string _configPrefix;
 
         public string ServiceProviderName { get; }
+        public bool AllowHttpRedirects { get; set; } = false;
         private string DefaultConfigKey { get; } 
 
         public ProxyClientBuilder(string serviceProviderName, IServiceCollection services, IConfiguration configuration, string configPrefix)
@@ -84,6 +85,7 @@ namespace OAuthProxy.AspNetCore.Extensions
             {
                 options.ServiceProviderName = _builderOption.ServiceProviderName;
                 options.OAuthConfiguration = _builderOption.OAuthConfiguration;
+                options.AllowHttpRedirects = AllowHttpRedirects;
             });
 
             _services.AddScoped<TClient>();
