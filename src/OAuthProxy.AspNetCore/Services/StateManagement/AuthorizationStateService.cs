@@ -39,7 +39,7 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
             string? protectedState;
             try
             {
-                var protector = _dpProvider.CreateProtector($"OAuthState-{thirdPartyProvider}");
+                var protector = _dataProtectionProvider.CreateProtector($"OAuthState-{thirdPartyProvider}");
                 var stateData = JsonSerializer.Serialize(parameters);
                 protectedState = protector.Protect(stateData);
             }
@@ -54,22 +54,13 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
             if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
                 query = query[1..];
 
-            var queryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(query);
-            var queryParams = new List<KeyValuePair<string, string>>();
+            var queryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(query)
+                .Where(k => !string.Equals(k.Key, "state", StringComparison.OrdinalIgnoreCase))
+                .ToDictionary(k => k.Key, k => k.Value.ToString());
 
-            foreach (var kvp in queryDict)
-            {
-                if (!string.Equals(kvp.Key, "state", StringComparison.OrdinalIgnoreCase))
-                {
-                    foreach (var value in kvp.Value)
-                    {
-                        queryParams.Add(new KeyValuePair<string, string>(kvp.Key, value ?? string.Empty));
-                    }
-                }
-            }
-
-            queryParams.Add(new KeyValuePair<string, string>("state", protectedState));
-            uri.Query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(string.Empty, queryParams);
+            queryDict.Add("state", protectedState);
+            uri.Query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(string.Empty, 
+                queryDict.Select(k => new KeyValuePair<string, string?>(k.Key, k.Value)));
 
             var res = uri.ToString();
 
@@ -82,7 +73,7 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
 
             try
             {
-                var protector = _dpProvider.CreateProtector($"OAuthState-{thirdPartyProvider}");
+                var protector = _dataProtectionProvider.CreateProtector($"OAuthState-{thirdPartyProvider}");
                 var unprotectedData = protector.Unprotect(state);
                 stateData = JsonSerializer.Deserialize<AuthorizationStateParameters>(unprotectedData);
             }
