@@ -31,7 +31,17 @@ jobs:
         sparse-checkout: |
           .github
           src
-        fetch-depth: 0  # Fetch full history for version calculation
+        fetch-depth: 1  # Shallow clone for current branch
+          
+    - name: Fetch main branch for version calculation
+      run: |
+        # Fetch main branch history for commit counting (only if not already on main)
+        if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+          git fetch origin main --unshallow
+        else
+          # If we're on main, we need the full history for counting
+          git fetch --unshallow
+        fi
           
     - name: Calculate Version
       id: version
