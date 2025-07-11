@@ -93,7 +93,7 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
                 _logger.LogError("State data not found by the data protector");
                 return Task.FromResult(new StateValidationResult
                 {
-                    ErrorMessage = "not found."
+                    ErrorMessage = "State data not found."
                 });
             }
 
