@@ -1,8 +1,6 @@
-﻿using OAuthProxy.AspNetCore.Services.StateManagement;
-
-namespace OAuthProxy.AspNetCore.Models
+﻿namespace OAuthProxy.AspNetCore.Services.StateManagement
 {
-    public class StatteValidationResult
+    public class StateValidationResult
     {
         public string? ErrorMessage { get; internal set; }
         public AuthorizationStateParameters? StateParameters { get; set; }

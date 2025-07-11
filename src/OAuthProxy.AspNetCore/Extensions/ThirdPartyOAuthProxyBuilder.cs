@@ -64,7 +64,7 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             return this;
         }
-        public ThirdPartyOAuthProxyBuilder ConfigureDrefaultDataProtector()
+        public ThirdPartyOAuthProxyBuilder ConfigureDefaultDataProtector()
         {
             _services.AddDataProtection()
                 .SetApplicationName("OAuthProxyDemo")

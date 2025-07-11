@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 using OAuthProxy.AspNetCore.Abstractions;
-using OAuthProxy.AspNetCore.Models;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
@@ -53,7 +52,6 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
                 throw new InvalidOperationException("Failed to generate state data.", ex);
             }
 
-            // Manually append the state parameter without encoding
             var uri = new UriBuilder(authorizeUrl);
             var query = uri.Query;
             if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
@@ -71,7 +69,7 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
             return Task.FromResult( res);
         }
         
-        public Task<StatteValidationResult> ValidateStateAsync(string thirPartyProvider, string state)
+        public Task<StateValidationResult> ValidateStateAsync(string thirdPartyProvider, string state)
         {
             AuthorizationStateParameters? stateData;
 
@@ -84,7 +82,7 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
             catch( Exception ex)
             {
                 _logger.LogError(ex, "Failed to unprotect state data");
-                return Task.FromResult(new StatteValidationResult
+                return Task.FromResult(new StateValidationResult
                 {
                     ErrorMessage = "Invalid state data."
                 });
@@ -92,24 +90,24 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
 
             if (stateData == null)
             {
-                _logger.LogError("Failed to deserialize state data");
-                return Task.FromResult(new StatteValidationResult
+                _logger.LogError("State data not found by the data protector");
+                return Task.FromResult(new StateValidationResult
                 {
-                    ErrorMessage = "Invalid state data."
+                    ErrorMessage = "not found."
                 });
             }
 
             if (string.IsNullOrEmpty(stateData.UserId))
             {
                 _logger.LogError("State data does not contain UserId");
-                return Task.FromResult(new StatteValidationResult
+                return Task.FromResult(new StateValidationResult
                 {
                     ErrorMessage = "State data is missing UserId."
                 });
             }
 
 
-            return Task.FromResult(new StatteValidationResult
+            return Task.FromResult(new StateValidationResult
             {
                 StateParameters = stateData
                 
