@@ -10,7 +10,7 @@
 ## Key Benefits
 
 - **Secure Token Management:** Stores access and refresh tokens securely using Entity Framework Core.
-- **CSRF Protection:** Built-in state management for secure authorization flows using the dotnet DataProtection api.
+- **CSRF Protection:** Built-in state management for secure authorization flows using the dotnet DataProtection API.
 - **Pluggable Identity:** Supports JWT, custom user ID providers, or other identity mechanisms.
 - **Extensible Architecture:** Easily add new OAuth providers with minimal configuration.
 - **Server-Side Secrets:** Keeps OAuth client secrets safe on the server, away from client applications.
