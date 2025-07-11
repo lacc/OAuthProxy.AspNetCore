@@ -88,7 +88,7 @@ namespace OAuthProxy.AspNetCore.Handlers
                     _logger.LogError(ex, "Error refreshing access token for user {UserId} and service {ServiceName}.", userId, serviceName);
                     return new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
                     {
-                        Content = new StringContent($"Error refreshing access token: {ex.Message}")
+                        Content = new StringContent("An internal server error occurred while refreshing the access token.")
                     };
                 }
 
