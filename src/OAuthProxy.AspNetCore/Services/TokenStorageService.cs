@@ -76,8 +76,7 @@ namespace OAuthProxy.AspNetCore.Services
 
         public async Task<UserTokenDTO?> RefreshTokenAsync(string userId, string serviceName, string refreshToken)
         {
-            var refreshedToken = await _refreshTokenService.RefreshTokenAsync(
-                serviceName, refreshToken);
+            var refreshedToken = await _refreshTokenService.RefreshTokenAsync(serviceName, refreshToken);
 
             if (refreshedToken == null)
             {
@@ -85,7 +84,7 @@ namespace OAuthProxy.AspNetCore.Services
             }
 
             await SaveTokenAsync(userId, serviceName,
-                refreshedToken.AccessToken, refreshedToken.RefreshToken ?? string.Empty, DateTime.UtcNow.AddSeconds(refreshedToken.ExpiresIn));
+                refreshedToken.AccessToken, refreshedToken.RefreshToken ?? refreshToken, DateTime.UtcNow.AddSeconds(refreshedToken.ExpiresIn));
 
             return await GetTokenAsync(userId, serviceName);
         }

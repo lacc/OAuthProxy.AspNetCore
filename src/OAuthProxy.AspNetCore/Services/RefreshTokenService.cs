@@ -24,15 +24,11 @@ namespace OAuthProxy.AspNetCore.Services
         public async Task<TokenResponse?> RefreshTokenAsync(string serviceName, string refreshToken)
         {
             var providerConfig = _options.Get(serviceName);
-            if (providerConfig == null)
+            if (providerConfig?.OAuthConfiguration == null)
             {
                 throw new InvalidOperationException($"Configuration for service '{serviceName}' not found.");
             }
 
-            if (providerConfig.OAuthConfiguration == null)
-            {
-                return null;
-            }
             var tokenExchanger = _authorizationFlowServiceFactory.GetAuthorizationRefreshTokenExchanger(serviceName);
             var refreshedToken = await tokenExchanger.ExchangeRefreshTokenAsync(
                 providerConfig.OAuthConfiguration, refreshToken);
