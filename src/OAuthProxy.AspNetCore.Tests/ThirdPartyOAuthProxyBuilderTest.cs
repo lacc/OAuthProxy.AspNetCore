@@ -39,7 +39,7 @@ namespace OAuthProxy.AspNetCore.Tests
                 opt.AutoMigration = false;
             });
 
-            services.AddScoped(sp => new Mock<IRefreshTokenService>().Object);
+            services.AddScoped<IRefreshTokenService>(sp => new Mock<IRefreshTokenService>().Object);
 
             var provider = services.BuildServiceProvider();
             Assert.True(dbOptionsCalled);
