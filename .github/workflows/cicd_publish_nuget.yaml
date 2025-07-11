@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - development
+      - 'feature/**'
+      - 'hotfix/**'
     paths:
       - '**/src/**'
       - '.github/workflows/cicd_publish_nuget.yaml'
@@ -15,15 +17,23 @@ permissions:
   packages: write
   attestations: write
   pull-requests: write
+
+env:
+  # Version Configuration
+  MAJOR_MINOR: "2.2"  # Update this when you have breaking changes (major) or new features (minor)
+  PRERELEASE_LABEL: "alpha"  # Options: alpha, beta, preview, rc (release candidate)
+  
+  # Branch Configuration
+  MAIN_BRANCH: "main"  # Change this if you use a different main branch name
+  
+  # Publishing Configuration - Easy toggles
+  PUBLISH_DEVELOPMENT: "true" # Set to "false" to skip publishing for development branches
   
 jobs:
   build:
     runs-on: ubuntu-latest
     # concurrency:
     #   group: staging_environment
-    env:
-      MAJOR_MINOR: "2.2"  # Update this when you have breaking changes (major) or new features (minor)
-      PRERELEASE_LABEL: "alpha"  # Options: alpha, beta, preview, rc (release candidate)
       
     steps:
     - name: Checkout code
@@ -37,8 +47,8 @@ jobs:
     - name: Fetch main branch for version calculation
       run: |
         # Fetch main branch history for commit counting (only if not already on main)
-        if [ "${{ github.ref }}" != "refs/heads/main" ]; then
-          git fetch origin main --unshallow
+        if [ "${{ github.ref }}" != "refs/heads/${{ env.MAIN_BRANCH }}" ]; then
+          git fetch origin ${{ env.MAIN_BRANCH }} --unshallow
         else
           # If we're on main, we need the full history for counting
           git fetch --unshallow
@@ -48,14 +58,14 @@ jobs:
       id: version
       run: |
         # Get the current main branch commit count for base version
-        MAIN_PATCH_VERSION=$(git rev-list --count origin/main)
+        MAIN_PATCH_VERSION=$(git rev-list --count origin/${{ env.MAIN_BRANCH }})
         MAIN_VERSION="${{ env.MAJOR_MINOR }}.${MAIN_PATCH_VERSION}"
         
-        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+        if [ "${{ github.ref }}" == "refs/heads/${{ env.MAIN_BRANCH }}" ]; then
           # For main branch, use the clean version
           VERSION="${MAIN_VERSION}"
         else
-          # For development branch, use semantic versioning pre-release format
+          # For development/feature branches, use semantic versioning pre-release format
           # Get short commit SHA for uniqueness and traceability
           COMMIT_SHA=$(git rev-parse --short HEAD)
           # Use next patch version + configurable prerelease label + commit SHA
@@ -120,6 +130,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: build
+    if: |
+      github.ref == 'refs/heads/${{ env.MAIN_BRANCH }}' ||
+      (github.ref != 'refs/heads/${{ env.MAIN_BRANCH }}' && env.PUBLISH_DEVELOPMENT == 'true')
     steps:
       - name: Download Publish Artifact
         uses: actions/download-artifact@v4
