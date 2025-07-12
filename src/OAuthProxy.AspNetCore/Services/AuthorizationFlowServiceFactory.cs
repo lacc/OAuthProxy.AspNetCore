@@ -3,7 +3,7 @@ using OAuthProxy.AspNetCore.Abstractions;
 
 namespace OAuthProxy.AspNetCore.Services
 {
-    internal class AuthorizationFlowServiceFactory
+    public class AuthorizationFlowServiceFactory
     {
         private readonly IServiceProvider _serviceProvider;
 

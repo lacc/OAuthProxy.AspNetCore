@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Moq;
+using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Data;
+using OAuthProxy.AspNetCore.Models;
 using OAuthProxy.AspNetCore.Services;
 
 namespace OAuthProxy.AspNetCore.Tests
@@ -18,7 +21,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task SaveTokenAsync_AddsAndUpdatesToken()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var userId = "user1";
             var serviceName = "providerA";
             var accessToken = "token1";
@@ -49,7 +52,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task GetTokenAsync_ReturnsUserTokenDTO_IfExists()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var userId = "user2";
             var serviceName = "providerB";
             var accessToken = "tokenX";
@@ -71,7 +74,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task GetTokenAsync_ReturnsNull_IfNotExists()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var dto = await service.GetTokenAsync("no-user", "no-service");
             Assert.Null(dto);
         }
@@ -80,7 +83,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task DeleteTokenAsync_RemovesToken()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var userId = "user3";
             var serviceName = "providerC";
             var accessToken = "tokenY";
@@ -98,7 +101,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task GetConnectedServicesAsync_ReturnsActiveServices()
         {
             var db = CreateInMemoryDbContext();
-            var service = new TokenStorageService(db);
+            var service = new TokenStorageService(db, new Mock<IRefreshTokenService>().Object);
             var userId = "user4";
             var now = DateTime.UtcNow;
 
@@ -110,6 +113,72 @@ namespace OAuthProxy.AspNetCore.Tests
             Assert.Contains("service1", services);
             Assert.Contains("service3", services);
             Assert.DoesNotContain("service2", services);
+        }
+
+        [Fact]
+        public async Task RefreshTokenAsync_UpdatesToken_WhenRefreshSucceeds()
+        {
+            var db = CreateInMemoryDbContext();
+            var userId = "user5";
+            var serviceName = "providerD";
+            var oldAccessToken = "oldAccess";
+            var oldRefreshToken = "oldRefresh";
+            var expiry = DateTime.UtcNow.AddMinutes(-10);
+
+            await db.OAuthTokens.AddAsync(new ThirdPartyTokenEntity
+            {
+                UserId = userId,
+                ThirdPartyServiceProvider = serviceName,
+                AccessToken = oldAccessToken,
+                RefreshToken = oldRefreshToken,
+                ExpiresAt = expiry,
+                CreatedAt = DateTime.UtcNow.AddHours(-1),
+                UpdatedAt = DateTime.UtcNow.AddHours(-1)
+            });
+            await db.SaveChangesAsync();
+
+            var newAccessToken = "newAccess";
+            var newRefreshToken = "newRefresh";
+            var expiresIn = 3600;
+            var mockRefreshService = new Mock<IRefreshTokenService>();
+            mockRefreshService
+                .Setup(x => x.RefreshTokenAsync(serviceName, oldRefreshToken))
+                .ReturnsAsync(new TokenResponse
+                {
+                    AccessToken = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                    ExpiresIn = expiresIn,
+                    TokenType = "Bearer"
+                });
+
+            var service = new TokenStorageService(db, mockRefreshService.Object);
+
+            var result = await service.RefreshTokenAsync(userId, serviceName, oldRefreshToken);
+
+            Assert.NotNull(result);
+            Assert.Equal(newAccessToken, result.AccessToken);
+            Assert.Equal(newRefreshToken, result.RefreshToken);
+            Assert.True(result.ExpiresAt > DateTime.UtcNow);
+        }
+
+        [Fact]
+        public async Task RefreshTokenAsync_ReturnsNull_WhenRefreshServiceReturnsNull()
+        {
+            var db = CreateInMemoryDbContext();
+            var userId = "user6";
+            var serviceName = "providerE";
+            var refreshToken = "refreshE";
+
+            var mockRefreshService = new Mock<IRefreshTokenService>();
+            mockRefreshService
+                .Setup(x => x.RefreshTokenAsync(serviceName, refreshToken))
+                .ReturnsAsync((TokenResponse?)null);
+
+            var service = new TokenStorageService(db, mockRefreshService.Object);
+
+            var result = await service.RefreshTokenAsync(userId, serviceName, refreshToken);
+
+            Assert.Null(result);
         }
     }
 }

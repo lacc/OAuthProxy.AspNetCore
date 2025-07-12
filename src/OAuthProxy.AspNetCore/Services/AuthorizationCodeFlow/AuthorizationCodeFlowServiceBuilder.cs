@@ -62,12 +62,12 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
             return this;
         }
 
-        public AuthorizationCodeFlowServiceBuilder ConfigureRefreshTokenExchanger<Tservice>()
-            where Tservice : class, IOAuthAuthorizationRefreshTokenExchanger
+        public AuthorizationCodeFlowServiceBuilder ConfigureRefreshTokenExchanger<TService>()
+            where TService : class, IOAuthAuthorizationRefreshTokenExchanger
         {
             _refreshTokenExchangerBuilder = services =>
             {
-                services.AddKeyedScoped<IOAuthAuthorizationRefreshTokenExchanger, Tservice>(ServiceProviderName);
+                services.AddKeyedScoped<IOAuthAuthorizationRefreshTokenExchanger, TService>(ServiceProviderName);
             };
             return this;
         }
