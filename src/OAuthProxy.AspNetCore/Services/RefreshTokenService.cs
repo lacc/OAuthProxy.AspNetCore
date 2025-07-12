@@ -24,7 +24,7 @@ namespace OAuthProxy.AspNetCore.Services
             var providerConfig = _options.Get(serviceName);
             if (providerConfig?.OAuthConfiguration == null)
             {
-                _logger.LogError($"Configuration for service '{serviceName}' not found.");
+                _logger.LogError("Configuration for service '{ServiceName}' not found.", serviceName);
                 throw new InvalidOperationException($"Configuration for service '{serviceName}' not found.");
             }
 
