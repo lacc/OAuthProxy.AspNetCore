@@ -59,7 +59,7 @@ namespace OAuthProxy.AspNetCore.Apis
             return app;
         }
         private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult, BadRequest>> HandleAuthorize(
-            [FromQuery(Name = LocalRedirectUriParameterName)] string? localRedirectUri, HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
+            [FromQuery(Name = LocalRedirectUriParameterName)] string? localRedirectUri, HttpRequest httpRequest, IHttpContextAccessor httpContextAccessor, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
         {
             var urlProvider = serviceFactory.GetAuthorizationUrlProvider(ServiceProviderName);
             if (urlProvider == null)
@@ -90,7 +90,16 @@ namespace OAuthProxy.AspNetCore.Apis
 
             // For non-AJAX requests, perform a redirect
             _logger.LogInformation("Redirecting to authorization URL: {authorizeUrl}", authorizeUrl);
-            httpRequest.HttpContext.Response.Redirect(authorizeUrl, false);
+            //httpRequest.HttpContext.Response.Redirect(authorizeUrl, false);
+            if(httpContextAccessor.HttpContext?.Response == null)
+            {
+                _logger.LogError("HttpContext is null, cannot set response status code or headers. returning OK with url");
+                return TypedResults.Ok(authorizeUrl);
+            }
+            
+            httpContextAccessor.HttpContext.Response.StatusCode = StatusCodes.Status302Found;
+            httpContextAccessor.HttpContext.Response.Headers.Append("Location", authorizeUrl);
+            
             return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with temporary status code
         }
 
