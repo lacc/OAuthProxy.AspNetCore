@@ -54,10 +54,14 @@ namespace OAuthProxy.AspNetCore.Apis
 
             return app;
         }
-        private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult>> HandleAuthorize(
+        private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult, BadRequest>> HandleAuthorize(
             [FromQuery(Name = LocalRedirectUriParameterName)] string? localRedirectUri, HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
         {
             var urlProvider = serviceFactory.GetAuthorizationUrlProvider(ServiceProviderName);
+            if (urlProvider == null)
+            {
+                return TypedResults.BadRequest();
+            }
 
             var redirectUri = httpRequest.GetDisplayUrl().Replace("authorize", "callback");
             if (!string.IsNullOrEmpty(httpRequest.QueryString.Value))
@@ -77,7 +81,8 @@ namespace OAuthProxy.AspNetCore.Apis
                 // If the request is an AJAX request, return the URL instead of redirecting
                 return TypedResults.Ok(authorizeUrl);
             }
-
+            // For non-AJAX requests, perform a redirect
+            httpRequest.HttpContext.Response.Redirect(authorizeUrl, false);
             return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with temporary status code
         }
 
