@@ -17,7 +17,12 @@ namespace OAuthProxy.AspNetCore.Apis
             var proxyConfiguration = scope.ServiceProvider.GetRequiredService<OAuthProxyConfiguration>();
             var providers = scope.ServiceProvider.GetServices<IRegisteredProxyProviders>();
 
-            var api = app.MapGroup(proxyConfiguration.ApiMapperConfiguration.ProxyUrlPrefix);
+            var proxyUrlPrefix = proxyConfiguration.ApiMapperConfiguration.ProxyUrlPrefix;
+            if (!proxyUrlPrefix.StartsWith("/"))
+            {
+                proxyUrlPrefix = "/" + proxyUrlPrefix;
+            }
+            var api = app.MapGroup(proxyUrlPrefix);
 
             foreach (var provider in providers)
             {
