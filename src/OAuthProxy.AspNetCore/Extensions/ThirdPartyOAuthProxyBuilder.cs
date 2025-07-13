@@ -103,7 +103,7 @@ namespace OAuthProxy.AspNetCore.Extensions
 
         public void Build()
         {
-            ConfigureApiMapper(_ => { });
+            ConfigureApiMapper(_ => { }); // to make sure it is called at least once
             _services.AddScoped(sp => BuilderOptions);
             _services.AddScoped(sp => BuilderOptions.ApiMapperConfiguration);
             _services.AddScoped<IProxyRequestContext, ProxyRequestContext>();

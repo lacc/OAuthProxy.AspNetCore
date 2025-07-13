@@ -16,6 +16,10 @@
         /// <summary>
         /// Gets or sets the list of URLs that are allowed for redirection.
         /// Leave this list empty to allow all redirect URLs (not recommended for production).
+        /// Supports wildcards at the end of the URL, e.g.:
+        ///   "https://example.com/callback" (exact match)
+        ///   "https://example.com/*" (matches any path under /)
+        ///   "https://example.com/callback*" (matches /callback and any string after)
         /// </summary>
         public IList<string> WhitelistedRedirectUrls { get; set; } = [];
 
