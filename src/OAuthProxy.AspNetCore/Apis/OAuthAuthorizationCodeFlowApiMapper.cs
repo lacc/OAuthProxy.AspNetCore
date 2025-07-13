@@ -152,16 +152,13 @@ namespace OAuthProxy.AspNetCore.Apis
                    Uri.TryCreate(redirectUri, UriKind.Absolute, out var _uri) &&
                     (_uri.Scheme == Uri.UriSchemeHttps ||
                    (_providerConfig.AllowHttpRedirects && _uri.Scheme == Uri.UriSchemeHttp)) &&
-                   EnsureWhitelistedUrl(
+                   IsUrlWhitelisted(
                        _proxyConfiguration.ApiMapperConfiguration.WhitelistedRedirectUrls, redirectUri);
         }
 
-        private static bool EnsureWhitelistedUrl(IEnumerable<string> whitelistedRedirectUrls, string redirectUrl)
-        {
-            return !whitelistedRedirectUrls.Any() ||
-                whitelistedRedirectUrls.Any(url => 
+        private static bool IsUrlWhitelisted(IEnumerable<string> whitelistedRedirectUrls, string redirectUrl) => !whitelistedRedirectUrls.Any() ||
+                whitelistedRedirectUrls.Any(url =>
                     url.Equals(redirectUrl, StringComparison.OrdinalIgnoreCase) ||
                     (url.EndsWith('*') && redirectUrl.StartsWith(url.TrimEnd('*'), StringComparison.OrdinalIgnoreCase)));
-        }
     }
 }

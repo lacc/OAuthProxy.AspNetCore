@@ -141,9 +141,9 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
   //Optional
   .ConfigureApiMapper(config =>
     {
-        config.ProxyUrlPrefix = "api/oauth";
+        config.ProxyUrlPrefix = "/api/oauth";
         config.AuthorizeRedirectUrlParameterName = "local_redirect_uri";
-        config.WhiteListedRedirectUrls =
+        config.WhitelistedRedirectUrls =
         [
             "https://localhost:5001/",
             "https://localhost:5001/someRedirectPage"
@@ -235,9 +235,9 @@ app.UseAuthentication();
   ```csharp
   proxyBuilder.ConfigureApiMapper(config =>
   {
-      config.ProxyUrlPrefix = "api/oauth";
+      config.ProxyUrlPrefix = "/api/oauth";
       config.AuthorizeRedirectUrlParameterName = "redirect_uri";
-      config.WhiteListedRedirectUrls =
+      config.WhitelistedRedirectUrls =
       [
           "https://localhost:5001/",
           "https://localhost:5001/someRedirectPage"
@@ -245,9 +245,9 @@ app.UseAuthentication();
 -     config.MapGenericApi = false;
   });
   ```
-  - `ProxyUrlPrefix`: Base path for proxy endpoints (default is `api/proxy`)
+  - `ProxyUrlPrefix`: Base path for proxy endpoints (default is `/api/proxy`)
   - `AuthorizeRedirectUrlParameterName`: Query parameter for redirect URL after authorization (default is `local_redirect_uri`)
-  - `WhiteListedRedirectUrls`: List of allowed redirect URLs after the authorization flow to prevent open redirects
+  - `WhitelistedRedirectUrls`: List of allowed redirect URLs after the authorization flow to prevent open redirects
   - `MapGenericApi`: If true, maps all endpoints under `/api/proxy/{Name}/*` to the third-party service. This is useful for quick testing but not recommended for production due to security risks.
 
 
