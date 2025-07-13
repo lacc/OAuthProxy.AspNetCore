@@ -15,6 +15,7 @@
 
         /// <summary>
         /// Gets or sets the list of URLs that are allowed for redirection.
+        /// Leave this list empty to allow all redirect URLs (not recommended for production).
         /// </summary>
         public IList<string> WhitelistedRedirectUrls { get; set; } = [];
 
