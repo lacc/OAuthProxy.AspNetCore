@@ -4,34 +4,46 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OAuthProxy.AspNetCore.Abstractions;
+using OAuthProxy.AspNetCore.Configurations;
 
 namespace OAuthProxy.AspNetCore.Apis
 {
     public static class OAuthProxyApiMapper
     {
-        public const string ProxyAipPrefix = "/api/proxy";
         public static IEndpointRouteBuilder MapProxyClientEndpoints(this IEndpointRouteBuilder app)
         {
-            var api = app.MapGroup(ProxyAipPrefix); // Define the base path for the API
             
             using var scope = app.ServiceProvider.CreateScope();
+            var proxyConfiguration = scope.ServiceProvider.GetRequiredService<OAuthProxyConfiguration>();
             var providers = scope.ServiceProvider.GetServices<IRegisteredProxyProviders>();
+
+            var proxyUrlPrefix = proxyConfiguration.ApiMapperConfiguration.ProxyUrlPrefix;
+            if (!proxyUrlPrefix.StartsWith("/"))
+            {
+                proxyUrlPrefix = "/" + proxyUrlPrefix;
+            }
+            var api = app.MapGroup(proxyUrlPrefix);
+
             foreach (var provider in providers)
             {
-                var providerApi = api.MapGroup($"{provider.ServiceProviderName.ToLower()}")
-                    .WithTags($"Proxy API for {provider.ServiceProviderName}")
-                    .WithName($"ProxyApi_{provider.ServiceProviderName}Endpoints")
-                    .WithDisplayName($"Proxy APIs for {provider.ServiceProviderName}")
-                    .WithDescription($"API endpoints for Proxy service: {provider.ServiceProviderName}");
-                
-                var mappers = scope.ServiceProvider.GetKeyedServices<IProxyApiMapper>(provider.ServiceProviderName);
+                var providerName = provider.ServiceProviderName;
+                var providerApi = api.MapGroup($"{providerName.ToLower()}")
+                    .WithTags($"Proxy API for {providerName}")
+                    .WithName($"ProxyApi_{providerName}Endpoints")
+                    .WithDisplayName($"Proxy APIs for {providerName}")
+                    .WithDescription($"API endpoints for Proxy service: {providerName}");
+
+                var mappers = scope.ServiceProvider.GetKeyedServices<IProxyApiMapper>(providerName);
                 foreach (var mapper in mappers)
                 {
                     // Map the proxy token endpoints for each service
                     mapper.MapProxyEndpoints(providerApi);
                 }
 
-                MapGenericApi(providerApi, provider.ServiceProviderName);
+                if (proxyConfiguration.ApiMapperConfiguration.MapGenericApi)
+                {
+                    MapGenericApi(providerApi, providerName);
+                }
             }
 
             return api;

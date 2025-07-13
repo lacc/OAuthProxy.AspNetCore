@@ -138,6 +138,18 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
           .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys")))
           .SetDefaultKeyLifetime(TimeSpan.FromDays(60));
   })
+  //Optional
+  .ConfigureApiMapper(config =>
+    {
+        config.ProxyUrlPrefix = "/api/oauth";
+        config.AuthorizeRedirectUrlParameterName = "local_redirect_uri";
+        config.WhitelistedRedirectUrls =
+        [
+            "https://localhost:5001/",
+            "https://localhost:5001/someRedirectPage"
+        ];
+        config.MapGenericApi = true;
+    })
   .AddOAuthServiceClient<GitHubClient>("ServiceA", clientBuilder => clientBuilder
     .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
 );
@@ -219,8 +231,27 @@ app.UseAuthentication();
   proxyBuilder.WithUserIdProvider<CustomUserIdProvider>()
   ```
   - The default user id provider uses claims to determine the user id (`sub` or `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier`)
+- Configure API Mapper
+  ```csharp
+  proxyBuilder.ConfigureApiMapper(config =>
+  {
+      config.ProxyUrlPrefix = "/api/oauth";
+      config.AuthorizeRedirectUrlParameterName = "redirect_uri";
+      config.WhitelistedRedirectUrls =
+      [
+          "https://localhost:5001/",
+          "https://localhost:5001/someRedirectPage"
+      ];
+-     config.MapGenericApi = false;
+  });
+  ```
+  - `ProxyUrlPrefix`: Base path for proxy endpoints (default is `/api/proxy`)
+  - `AuthorizeRedirectUrlParameterName`: Query parameter for redirect URL after authorization (default is `local_redirect_uri`)
+  - `WhitelistedRedirectUrls`: List of allowed redirect URLs after the authorization flow to prevent open redirects
+  - `MapGenericApi`: If true, maps all endpoints under `/api/proxy/{Name}/*` to the third-party service. This is useful for quick testing but not recommended for production due to security risks.
 
-- Configure 3rd party service
+
+- - Configure 3rd party service
   ```csharp
   proxyBuilder.AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
     .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))

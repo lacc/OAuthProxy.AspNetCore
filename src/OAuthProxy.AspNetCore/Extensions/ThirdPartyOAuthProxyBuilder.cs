@@ -94,13 +94,24 @@ namespace OAuthProxy.AspNetCore.Extensions
             return this;
         }
 
+        public ThirdPartyOAuthProxyBuilder ConfigureApiMapper(Action<ApiMapperConfiguration> mapperConfig)
+        {
+            var config = BuilderOptions.ApiMapperConfiguration;
+            mapperConfig?.Invoke(config);
+            return this;
+        }
+
         public void Build()
         {
+            ConfigureApiMapper(_ => { }); // to make sure it is called at least once
+            _services.AddScoped(sp => BuilderOptions);
+            _services.AddScoped(sp => BuilderOptions.ApiMapperConfiguration);
             _services.AddScoped<IProxyRequestContext, ProxyRequestContext>();
             _services.AddScoped<AuthorizationFlowServiceFactory>();
             _services.AddScoped<IAuthorizationStateService, AuthorizationStateService>();
             _services.AddScoped<BasicOAuthBearerTokenHandler>();
             _services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+            
 
             if (BuilderOptions.UserIdProvider == null)
             {
