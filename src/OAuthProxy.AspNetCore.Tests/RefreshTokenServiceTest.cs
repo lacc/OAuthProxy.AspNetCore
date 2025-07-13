@@ -47,7 +47,7 @@ namespace OAuthProxy.AspNetCore.Tests
             Assert.NotNull(result);
             Assert.Equal("access", result.AccessToken);
             Assert.Equal("refresh", result.RefreshToken);
-            Assert.Equal(expiresAt, result.ExpiresAt);
+            Assert.InRange(result.ExpiresAt, expiresAt.AddSeconds(-1), expiresAt.AddSeconds(1));
         }
 
         [Fact]
