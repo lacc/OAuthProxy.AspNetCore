@@ -26,12 +26,13 @@ namespace OAuthProxy.AspNetCore.Tests
             mockOptions.Setup(x => x.Get(serviceName)).Returns(config);
 
             var mockExchanger = new Mock<IOAuthAuthorizationRefreshTokenExchanger>();
+            var expiresAt = DateTime.UtcNow.AddSeconds(3600);
             mockExchanger.Setup(x => x.ExchangeRefreshTokenAsync(config.OAuthConfiguration, refreshToken))
-                .ReturnsAsync(new TokenResponse
+                .ReturnsAsync(new TokenExchangeResponse
                 {
                     AccessToken = "access",
                     RefreshToken = "refresh",
-                    ExpiresIn = 3600,
+                    ExpiresAt = expiresAt,
                     TokenType = "Bearer"
                 });
             var services = new ServiceCollection();
@@ -46,7 +47,7 @@ namespace OAuthProxy.AspNetCore.Tests
             Assert.NotNull(result);
             Assert.Equal("access", result.AccessToken);
             Assert.Equal("refresh", result.RefreshToken);
-            Assert.Equal(3600, result.ExpiresIn);
+            Assert.Equal(expiresAt, result.ExpiresAt);
         }
 
         [Fact]
@@ -55,7 +56,8 @@ namespace OAuthProxy.AspNetCore.Tests
             var serviceName = "providerB";
             var refreshToken = "refreshB";
             var mockOptions = new Mock<IOptionsSnapshot<ThirdPartyProviderConfig>>();
-            mockOptions.Setup(x => x.Get(serviceName)).Returns((ThirdPartyProviderConfig?)null);
+            ThirdPartyProviderConfig c = new ThirdPartyProviderConfig();
+            mockOptions.Setup(x => x.Get(serviceName)).Returns(c);
 
             var mockFactory = new Mock<AuthorizationFlowServiceFactory>(MockBehavior.Strict, new object[] { null! });
             var logger = new Mock<ILogger<RefreshTokenService>>().Object;
@@ -82,7 +84,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var mockExchanger = new Mock<IOAuthAuthorizationRefreshTokenExchanger>();
             mockExchanger
                 .Setup(x => x.ExchangeRefreshTokenAsync(config.OAuthConfiguration, refreshToken))
-                .ReturnsAsync((TokenResponse?)null!);
+                .ReturnsAsync((TokenExchangeResponse?)null!);
 
             var services = new ServiceCollection();
             services.AddKeyedScoped<IOAuthAuthorizationRefreshTokenExchanger>(

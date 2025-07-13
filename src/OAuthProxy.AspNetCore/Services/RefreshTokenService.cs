@@ -19,7 +19,7 @@ namespace OAuthProxy.AspNetCore.Services
             _options = options;
         }
 
-        public async Task<TokenResponse?> RefreshTokenAsync(string serviceName, string refreshToken)
+        public async Task<TokenExchangeResponse?> RefreshTokenAsync(string serviceName, string refreshToken)
         {
             var providerConfig = _options.Get(serviceName);
             if (providerConfig?.OAuthConfiguration == null)

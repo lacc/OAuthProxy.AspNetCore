@@ -4,6 +4,6 @@ namespace OAuthProxy.AspNetCore.Abstractions
 {
     public interface IRefreshTokenService
     {
-        Task<TokenResponse?> RefreshTokenAsync(string serviceName, string refreshToken);
+        Task<TokenExchangeResponse?> RefreshTokenAsync(string serviceName, string refreshToken);
     }
 }

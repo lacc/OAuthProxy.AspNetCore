@@ -14,8 +14,8 @@ namespace OAuthProxy.AspNetCore.Services.StateManagement
         private readonly IUserIdProvider _userIdProvider;
         private readonly IDataProtectionProvider _dataProtectionProvider;
 
-        public AuthorizationStateService( ILogger<AuthorizationStateService> logger,
-            IUserIdProvider userIdProvider, IDataProtectionProvider dataProtectionProvider)
+        public AuthorizationStateService(ILogger<AuthorizationStateService> logger,
+            IUserIdProvider userIdProvider,IDataProtectionProvider dataProtectionProvider)
         {
             _logger = logger;
             _userIdProvider = userIdProvider;

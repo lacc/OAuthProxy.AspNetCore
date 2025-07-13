@@ -139,15 +139,15 @@ namespace OAuthProxy.AspNetCore.Tests
 
             var newAccessToken = "newAccess";
             var newRefreshToken = "newRefresh";
-            var expiresIn = 3600;
+            var expiresAt = DateTime.UtcNow.AddSeconds(3600);
             var mockRefreshService = new Mock<IRefreshTokenService>();
             mockRefreshService
                 .Setup(x => x.RefreshTokenAsync(serviceName, oldRefreshToken))
-                .ReturnsAsync(new TokenResponse
+                .ReturnsAsync(new TokenExchangeResponse
                 {
                     AccessToken = newAccessToken,
                     RefreshToken = newRefreshToken,
-                    ExpiresIn = expiresIn,
+                    ExpiresAt = expiresAt,
                     TokenType = "Bearer"
                 });
 
@@ -172,7 +172,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var mockRefreshService = new Mock<IRefreshTokenService>();
             mockRefreshService
                 .Setup(x => x.RefreshTokenAsync(serviceName, refreshToken))
-                .ReturnsAsync((TokenResponse?)null);
+                .ReturnsAsync((TokenExchangeResponse?)null);
 
             var service = new TokenStorageService(db, mockRefreshService.Object);
 

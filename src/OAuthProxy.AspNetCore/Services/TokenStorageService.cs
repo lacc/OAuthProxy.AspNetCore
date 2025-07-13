@@ -18,7 +18,7 @@ namespace OAuthProxy.AspNetCore.Services
             _refreshTokenService = refreshTokenService;
         }
 
-        public async Task SaveTokenAsync(string userId, string serviceName, string accessToken, string refreshToken, DateTime expiry)
+        public async Task SaveTokenAsync(string userId, string serviceName, string accessToken, string refreshToken, DateTime expiresAt)
         {
             var token = await _dbContext.OAuthTokens
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.ThirdPartyServiceProvider == serviceName);
@@ -31,7 +31,7 @@ namespace OAuthProxy.AspNetCore.Services
 
             token.AccessToken = accessToken;
             token.RefreshToken = refreshToken;
-            token.ExpiresAt = expiry;
+            token.ExpiresAt = expiresAt;
             token.UpdatedAt = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
         }
@@ -84,7 +84,7 @@ namespace OAuthProxy.AspNetCore.Services
             }
 
             await SaveTokenAsync(userId, serviceName,
-                refreshedToken.AccessToken, refreshedToken.RefreshToken ?? refreshToken, DateTime.UtcNow.AddSeconds(refreshedToken.ExpiresIn));
+                refreshedToken.AccessToken, refreshedToken.RefreshToken ?? refreshToken, refreshedToken.ExpiresAt);
 
             return await GetTokenAsync(userId, serviceName);
         }

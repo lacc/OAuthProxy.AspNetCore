@@ -90,13 +90,13 @@ namespace OAuthProxy.AspNetCore.Apis
 
             // For non-AJAX requests, perform a redirect
             _logger.LogInformation("Redirecting to authorization URL: {authorizeUrl}", authorizeUrl);
-            //httpRequest.HttpContext.Response.Redirect(authorizeUrl, false);
             if(httpContextAccessor.HttpContext?.Response == null)
             {
                 _logger.LogError("HttpContext is null, cannot set response status code or headers. returning OK with url");
                 return TypedResults.Ok(authorizeUrl);
             }
-            
+
+            httpRequest.HttpContext.Response.Redirect(authorizeUrl, false);
             httpContextAccessor.HttpContext.Response.StatusCode = StatusCodes.Status302Found;
             httpContextAccessor.HttpContext.Response.Headers.Append("Location", authorizeUrl);
             

@@ -5,6 +5,6 @@ namespace OAuthProxy.AspNetCore.Abstractions
 {
     public interface IOAuthAuthorizationRefreshTokenExchanger
     {
-        Task<TokenResponse> ExchangeRefreshTokenAsync(ThirdPartyServiceConfig config, string refresh_token);
+        Task<TokenExchangeResponse> ExchangeRefreshTokenAsync(ThirdPartyServiceConfig config, string refresh_token);
     }
 }

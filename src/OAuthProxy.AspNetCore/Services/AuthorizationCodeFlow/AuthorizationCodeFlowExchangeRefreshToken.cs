@@ -17,7 +17,7 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
             _logger = logger;
         }
 
-        public async Task<TokenResponse> ExchangeRefreshTokenAsync(ThirdPartyServiceConfig config, string refresh_token)
+        public async Task<TokenExchangeResponse> ExchangeRefreshTokenAsync(ThirdPartyServiceConfig config, string refresh_token)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, config.TokenEndpoint)
             {
@@ -41,11 +41,11 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
                 throw new InvalidOperationException("Failed to refresh access token.");
             }
 
-            return new TokenResponse
+            return new TokenExchangeResponse
             {
                 AccessToken = tokenResponse.AccessToken,
                 RefreshToken = tokenResponse.RefreshToken ?? string.Empty,
-                ExpiresIn = tokenResponse.ExpiresIn
+                ExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn)
             };
 
 
