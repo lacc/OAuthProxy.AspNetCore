@@ -96,10 +96,6 @@ namespace OAuthProxy.AspNetCore.Apis
                 return TypedResults.Ok(authorizeUrl);
             }
 
-            //httpRequest.HttpContext.Response.Redirect(authorizeUrl, false);
-            //httpRequest.HttpContext.Response.StatusCode = StatusCodes.Status302Found;
-            //httpRequest.HttpContext.Response.Headers.Append("Location", authorizeUrl);
-            
             return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with temporary status code
         }
 
