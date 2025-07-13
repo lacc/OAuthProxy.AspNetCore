@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
@@ -16,14 +17,17 @@ namespace OAuthProxy.AspNetCore.Apis
     internal class OAuthAuthorizationCodeFlowApiMapper : IProxyApiMapper
     {
         private readonly ThirdPartyProviderConfig _providerConfig;
+        private readonly ILogger<OAuthAuthorizationCodeFlowApiMapper> _logger;
 
-        public OAuthAuthorizationCodeFlowApiMapper([ServiceKey] string serviceKey, IOptionsSnapshot<ThirdPartyProviderConfig> options)
+        public OAuthAuthorizationCodeFlowApiMapper([ServiceKey] string serviceKey, IOptionsSnapshot<ThirdPartyProviderConfig> options, ILogger<OAuthAuthorizationCodeFlowApiMapper> logger)
         {
             _providerConfig = options.Get(serviceKey);
             if (_providerConfig == null)
             {
                 throw new InvalidOperationException($"Configuration for service '{serviceKey}' not found.");
             }
+
+            _logger = logger;
         }
 
         public string ServiceProviderName => _providerConfig?.ServiceProviderName ?? 
@@ -54,10 +58,15 @@ namespace OAuthProxy.AspNetCore.Apis
 
             return app;
         }
-        private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult>> HandleAuthorize(
+        private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult, BadRequest<string>>> HandleAuthorize(
             [FromQuery(Name = LocalRedirectUriParameterName)] string? localRedirectUri, HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
         {
             var urlProvider = serviceFactory.GetAuthorizationUrlProvider(ServiceProviderName);
+            if (urlProvider == null)
+            {
+                _logger.LogError("No authorization URL provider registered for service '{ServiceProviderName}'", ServiceProviderName);
+                return TypedResults.BadRequest("Service configuration error");
+            }
 
             var redirectUri = httpRequest.GetDisplayUrl().Replace("authorize", "callback");
             if (!string.IsNullOrEmpty(httpRequest.QueryString.Value))
@@ -75,6 +84,15 @@ namespace OAuthProxy.AspNetCore.Apis
                 value == "XMLHttpRequest")
             {
                 // If the request is an AJAX request, return the URL instead of redirecting
+                _logger.LogInformation("Returning authorization URL for AJAX request: {AuthorizeUrl}", authorizeUrl);
+                return TypedResults.Ok(authorizeUrl);
+            }
+
+            // For non-AJAX requests, perform a redirect
+            _logger.LogInformation("Redirecting to authorization URL: {authorizeUrl}", authorizeUrl);
+            if(httpRequest.HttpContext?.Response == null)
+            {
+                _logger.LogError("HttpContext is null, cannot set response status code or headers. returning OK with url");
                 return TypedResults.Ok(authorizeUrl);
             }
 
@@ -87,6 +105,7 @@ namespace OAuthProxy.AspNetCore.Apis
             var stateValidationResult = await stateService.ValidateStateAsync(ServiceProviderName, state);
             if (!stateValidationResult?.IsValid ?? false)
             {
+                _logger.LogWarning("Invalid state parameter on callback");
                 return TypedResults.Unauthorized();
             }
 
@@ -95,12 +114,14 @@ namespace OAuthProxy.AspNetCore.Apis
 
             if (token == null || string.IsNullOrEmpty(token.AccessToken))
             {
+                _logger.LogError("Failed to exchange authorization code for access token. ");
                 return TypedResults.BadRequest("Failed to exchange authorization code for access token.");
             }
 
             var userId = stateValidationResult?.StateParameters?.UserId;
             if (string.IsNullOrEmpty(userId))
             {
+                _logger.LogWarning("User ID is missing in the state parameters.");
                 return TypedResults.Unauthorized();
             }
 
@@ -110,9 +131,11 @@ namespace OAuthProxy.AspNetCore.Apis
             var redirectUri = stateValidationResult?.StateParameters?.RedirectUrl ?? string.Empty;
             if (IsValidRedirectUri(redirectUri))
             {
+                _logger.LogInformation("Redirecting to local redirect URI: {RedirectUri}", redirectUri);
                 return TypedResults.Redirect(redirectUri, true, true); // Redirect with permanent status code
             }
 
+            _logger.LogWarning("Invalid redirect URI: {RedirectUri}, returning OK", redirectUri);
             return TypedResults.Ok("Success");
         }
 

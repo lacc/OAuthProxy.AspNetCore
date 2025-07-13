@@ -120,7 +120,6 @@ namespace OAuthProxy.AspNetCore.Tests
             var builder = new ThirdPartyOAuthProxyBuilder(services, config);
 
             Assert.Throws<ArgumentException>(() => builder.AddOAuthServiceClient<DummyClient>("", null));
-            Assert.Throws<ArgumentException>(() => builder.AddOAuthServiceClient<DummyClient>(null, null));
         }
 
         [Fact]

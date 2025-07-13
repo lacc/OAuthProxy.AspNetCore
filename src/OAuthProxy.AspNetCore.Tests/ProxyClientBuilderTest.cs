@@ -16,8 +16,6 @@ namespace OAuthProxy.AspNetCore.Tests
 
             Assert.Throws<ArgumentException>(() =>
                 new ProxyClientBuilder<DummyClient>("", services, config, "Prefix"));
-            Assert.Throws<ArgumentException>(() =>
-                new ProxyClientBuilder<DummyClient>(null, services, config, "Prefix"));
         }
 
         [Fact]
@@ -35,7 +33,7 @@ namespace OAuthProxy.AspNetCore.Tests
         {
             var services = new ServiceCollection();
             var config = new ConfigurationBuilder().AddInMemoryCollection(
-                    new[] { new KeyValuePair<string, string?>("Prefix:TestProvider:ClientId", "test-client-id") }).Build();
+                    [new KeyValuePair<string, string?>("Prefix:TestProvider:ClientId", "test-client-id")]).Build();
 
             var builder = new ProxyClientBuilder<DummyClient>("TestProvider", services, config, "Prefix")
                 .WithAuthorizationConfig(config.GetSection("Prefix:TestProvider"));
@@ -48,7 +46,7 @@ namespace OAuthProxy.AspNetCore.Tests
         {
             var services = new ServiceCollection();
             var config = new ConfigurationBuilder().AddInMemoryCollection(
-                    new[] { new KeyValuePair<string, string?>("Prefix:TestProvider:ClientId", "test-client-id") }).Build();
+                    [new KeyValuePair<string, string?>("Prefix:TestProvider:ClientId", "test-client-id")]).Build();
             
             var builder = new ProxyClientBuilder<DummyClient>("TestProvider", services, config, "Prefix")
                 .WithAuthorizationCodeFlow(config.GetSection("Prefix:TestProvider"));

@@ -43,9 +43,9 @@ namespace OAuthProxy.AspNetCore.Handlers
                     Content = new StringContent("Service name is not specified.")
                 };
             }
+
             var token = await _tokenService.GetTokenAsync(userId, serviceName);
-            
-            if (token == null)
+            if (string.IsNullOrEmpty(token?.AccessToken))
             {
                 _logger.LogWarning("Access token is not available for user {UserId} and service {ServiceName}.", userId, serviceName);
                 return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)
@@ -56,7 +56,7 @@ namespace OAuthProxy.AspNetCore.Handlers
 
             if (token.IsExpired)
             {
-                if (token.RefreshToken == null)
+                if (string.IsNullOrEmpty(token.RefreshToken))
                 {
                     _logger.LogWarning("Access token is expired and no refresh token is available for user {UserId} and service {ServiceName}.", userId, serviceName);
                     return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)
@@ -69,12 +69,7 @@ namespace OAuthProxy.AspNetCore.Handlers
                 try
                 {
                     var refreshedToken = await _tokenService.RefreshTokenAsync(userId, serviceName, token.RefreshToken);
-                    if (refreshedToken != null)
-                    {
-                        _logger.LogInformation("Access token refreshed successfully for user {UserId} and service {ServiceName}.", userId, serviceName);
-                        token = refreshedToken;
-                    }
-                    else
+                    if (string.IsNullOrEmpty(refreshedToken?.AccessToken))
                     {
                         _logger.LogWarning("Failed to refresh access token for user {UserId} and service {ServiceName}.", userId, serviceName);
                         return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)
@@ -82,6 +77,9 @@ namespace OAuthProxy.AspNetCore.Handlers
                             Content = new StringContent("Failed to refresh access token.")
                         };
                     }
+                     
+                    _logger.LogInformation("Access token refreshed successfully for user {UserId} and service {ServiceName}.", userId, serviceName);
+                    token = refreshedToken;
                 }
                 catch (Exception ex)
                 {
