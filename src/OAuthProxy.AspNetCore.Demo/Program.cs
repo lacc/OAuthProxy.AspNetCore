@@ -42,7 +42,7 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
     {
         config.ProxyUrlPrefix = "api/oauth";
         config.AuthorizeRedirectUrlParameterName = "local_redirect_uri";
-        config.WhiteListedRedirectUrls =
+        config.WhitelistedRedirectUrls =
         [
             "https://localhost:5001/",
             "https://localhost:5001/someRedirectPage"

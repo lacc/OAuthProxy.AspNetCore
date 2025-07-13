@@ -103,10 +103,6 @@ namespace OAuthProxy.AspNetCore.Apis
                 return TypedResults.Ok(authorizeUrl);
             }
 
-            //httpRequest.HttpContext.Response.Redirect(authorizeUrl, false);
-            //httpRequest.HttpContext.Response.StatusCode = StatusCodes.Status302Found;
-            //httpRequest.HttpContext.Response.Headers.Append("Location", authorizeUrl);
-            
             return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with temporary status code
         }
 
@@ -156,14 +152,14 @@ namespace OAuthProxy.AspNetCore.Apis
                    Uri.TryCreate(redirectUri, UriKind.Absolute, out var _uri) &&
                     (_uri.Scheme == Uri.UriSchemeHttps ||
                    (_providerConfig.AllowHttpRedirects && _uri.Scheme == Uri.UriSchemeHttp)) &&
-                   EnsureWhiteListedUrl(
-                       _proxyConfiguration.ApiMapperConfiguration.WhiteListedRedirectUrls, redirectUri);
+                   EnsureWhitelistedUrl(
+                       _proxyConfiguration.ApiMapperConfiguration.WhitelistedRedirectUrls, redirectUri);
         }
 
-        private static bool EnsureWhiteListedUrl(IEnumerable<string> whiteListRedirectUrls, string redirectUrl)
+        private static bool EnsureWhitelistedUrl(IEnumerable<string> whitelistedRedirectUrls, string redirectUrl)
         {
-            return !whiteListRedirectUrls.Any() ||
-                whiteListRedirectUrls.Any(url => 
+            return !whitelistedRedirectUrls.Any() ||
+                whitelistedRedirectUrls.Any(url => 
                     url.Equals(redirectUrl, StringComparison.OrdinalIgnoreCase) ||
                     (url.EndsWith('*') && redirectUrl.StartsWith(url.TrimEnd('*'), StringComparison.OrdinalIgnoreCase)));
         }

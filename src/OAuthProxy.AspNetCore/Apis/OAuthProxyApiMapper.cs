@@ -21,13 +21,14 @@ namespace OAuthProxy.AspNetCore.Apis
 
             foreach (var provider in providers)
             {
-                var providerApi = api.MapGroup($"{provider.ServiceProviderName.ToLower()}")
-                    .WithTags($"Proxy API for {provider.ServiceProviderName}")
-                    .WithName($"ProxyApi_{provider.ServiceProviderName}Endpoints")
-                    .WithDisplayName($"Proxy APIs for {provider.ServiceProviderName}")
-                    .WithDescription($"API endpoints for Proxy service: {provider.ServiceProviderName}");
+                var providerName = provider.ServiceProviderName;
+                var providerApi = api.MapGroup($"{providerName.ToLower()}")
+                    .WithTags($"Proxy API for {providerName}")
+                    .WithName($"ProxyApi_{providerName}Endpoints")
+                    .WithDisplayName($"Proxy APIs for {providerName}")
+                    .WithDescription($"API endpoints for Proxy service: {providerName}");
 
-                var mappers = scope.ServiceProvider.GetKeyedServices<IProxyApiMapper>(provider.ServiceProviderName);
+                var mappers = scope.ServiceProvider.GetKeyedServices<IProxyApiMapper>(providerName);
                 foreach (var mapper in mappers)
                 {
                     // Map the proxy token endpoints for each service
@@ -36,7 +37,7 @@ namespace OAuthProxy.AspNetCore.Apis
 
                 if (proxyConfiguration.ApiMapperConfiguration.MapGenericApi)
                 {
-                    MapGenericApi(providerApi, provider.ServiceProviderName);
+                    MapGenericApi(providerApi, providerName);
                 }
             }
 

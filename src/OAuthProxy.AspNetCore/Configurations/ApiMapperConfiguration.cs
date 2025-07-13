@@ -1,5 +1,4 @@
-﻿
-namespace OAuthProxy.AspNetCore.Configurations
+﻿namespace OAuthProxy.AspNetCore.Configurations
 {
     public class ApiMapperConfiguration
     {
@@ -13,10 +12,12 @@ namespace OAuthProxy.AspNetCore.Configurations
         /// Gets or sets the name of the query parameter used to specify the final redirect URL after the authorization flow.
         /// </summary>
         public string AuthorizeRedirectUrlParameterName { get; set; } = "local_redirect_uri";
+
         /// <summary>
         /// Gets or sets the list of URLs that are allowed for redirection.
         /// </summary>
-        public IList<string> WhiteListedRedirectUrls { get; set; } = [];
+        public IList<string> WhitelistedRedirectUrls { get; set; } = [];
+
         /// <summary>
         /// Gets or sets a value indicating whether the generic API should be mapped which allows proxying any endpoint
         /// </summary>
