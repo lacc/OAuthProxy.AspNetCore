@@ -58,14 +58,14 @@ namespace OAuthProxy.AspNetCore.Apis
 
             return app;
         }
-        private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult, BadRequest>> HandleAuthorize(
+        private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult, BadRequest<string>>> HandleAuthorize(
             [FromQuery(Name = LocalRedirectUriParameterName)] string? localRedirectUri, HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
         {
             var urlProvider = serviceFactory.GetAuthorizationUrlProvider(ServiceProviderName);
             if (urlProvider == null)
             {
                 _logger.LogError("No authorization URL provider registered for service '{ServiceProviderName}'", ServiceProviderName);
-                return TypedResults.BadRequest();
+                return TypedResults.BadRequest("Service configuration error");
             }
 
             var redirectUri = httpRequest.GetDisplayUrl().Replace("authorize", "callback");
