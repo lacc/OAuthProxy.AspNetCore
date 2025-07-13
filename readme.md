@@ -231,6 +231,7 @@ app.UseAuthentication();
   proxyBuilder.WithUserIdProvider<CustomUserIdProvider>()
   ```
   - The default user id provider uses claims to determine the user id (`sub` or `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier`)
+
 - Configure API Mapper
   ```csharp
   proxyBuilder.ConfigureApiMapper(config =>
@@ -242,7 +243,7 @@ app.UseAuthentication();
           "https://localhost:5001/",
           "https://localhost:5001/someRedirectPage"
       ];
--     config.MapGenericApi = false;
+      config.MapGenericApi = false;
   });
   ```
   - `ProxyUrlPrefix`: Base path for proxy endpoints (default is `/api/proxy`)
@@ -251,7 +252,7 @@ app.UseAuthentication();
   - `MapGenericApi`: If true, maps all endpoints under `/api/proxy/{Name}/*` to the third-party service. This is useful for quick testing but not recommended for production due to security risks.
 
 
-- - Configure 3rd party service
+- Configure 3rd party service
   ```csharp
   proxyBuilder.AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
     .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
