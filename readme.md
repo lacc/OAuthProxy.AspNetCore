@@ -90,8 +90,8 @@ Follow these steps to set up and run the demo project:
    ```sh
    cd OAuthProxy.AspNetCore.Demo
    dotnet run
-   ```
-  The default configuration uses SQLite and db file with auto migration on startup.
+   ```  
+   > **Note:** The default configuration uses SQLite and db file with auto migration on startup.
 
 4. **Authenticate:**
    - Start the authentication process by calling:
@@ -104,7 +104,7 @@ Follow these steps to set up and run the demo project:
      ```
      https://localhost:7135/api/proxy/ServiceA/{some_provider_endpoint}
      ```
-   - **Note:** The name `ServiceA` can be customized in the `Program.cs` file.
+   > **Note:** The name `ServiceA` can be customized in the `Program.cs` file.
 
 ### Important Notes
 - **Generic Proxy Behavior:** The library registers a mapper for all endpoints under the client config name (e.g., `ServiceA`). This means every request to `/api/proxy/ServiceA/*` is proxied directly to the third-party provider without validation. While this is useful for testing, it’s not ideal for production due to limited control and security risks.
@@ -230,7 +230,8 @@ app.UseAuthentication();
   ```csharp
   proxyBuilder.WithUserIdProvider<CustomUserIdProvider>()
   ```
-  - The default user id provider uses claims to determine the user id (`sub` or `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier`)
+  > **Note:** The default user id provider uses claims to determine the user id (`sub` or `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier`)
+
 - Configure API Mapper
   ```csharp
   proxyBuilder.ConfigureApiMapper(config =>
@@ -242,7 +243,7 @@ app.UseAuthentication();
           "https://localhost:5001/",
           "https://localhost:5001/someRedirectPage"
       ];
--     config.MapGenericApi = false;
+      config.MapGenericApi = false;
   });
   ```
   - `ProxyUrlPrefix`: Base path for proxy endpoints (default is `/api/proxy`)
@@ -251,7 +252,7 @@ app.UseAuthentication();
   - `MapGenericApi`: If true, maps all endpoints under `/api/proxy/{Name}/*` to the third-party service. This is useful for quick testing but not recommended for production due to security risks.
 
 
-- - Configure 3rd party service
+- Configure 3rd party service
   ```csharp
   proxyBuilder.AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
     .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
