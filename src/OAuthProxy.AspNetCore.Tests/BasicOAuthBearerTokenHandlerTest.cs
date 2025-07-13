@@ -37,7 +37,7 @@ namespace OAuthProxy.AspNetCore.Tests
         {
             var tokenService = Mock.Of<ITokenStorageService>();
             var userIdProvider = new Mock<IUserIdProvider>();
-            userIdProvider.Setup(x => x.GetCurrentUserId()).Returns((string)null);
+            userIdProvider.Setup(x => x.GetCurrentUserId()).Returns((string?)null);
             var proxyRequestContext = Mock.Of<IProxyRequestContext>();
 
             var invoker = CreateInvoker(tokenService, userIdProvider.Object, proxyRequestContext);
@@ -53,7 +53,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var userIdProvider = new Mock<IUserIdProvider>();
             userIdProvider.Setup(x => x.GetCurrentUserId()).Returns("user1");
             var proxyRequestContext = new Mock<IProxyRequestContext>();
-            proxyRequestContext.Setup(x => x.GetServiceName()).Returns((string)null);
+            proxyRequestContext.Setup(x => x.GetServiceName()).Returns(string.Empty);
 
             var invoker = CreateInvoker(tokenService, userIdProvider.Object, proxyRequestContext.Object);
             var response = await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://test"), CancellationToken.None);
@@ -65,7 +65,7 @@ namespace OAuthProxy.AspNetCore.Tests
         public async Task SendAsync_ReturnsUnauthorized_IfTokenMissing()
         {
             var tokenService = new Mock<ITokenStorageService>();
-            tokenService.Setup(x => x.GetTokenAsync("user1", "serviceA")).ReturnsAsync((UserTokenDTO)null);
+            tokenService.Setup(x => x.GetTokenAsync("user1", "serviceA")).ReturnsAsync((UserTokenDTO?)null);
             var userIdProvider = new Mock<IUserIdProvider>();
             userIdProvider.Setup(x => x.GetCurrentUserId()).Returns("user1");
             var proxyRequestContext = new Mock<IProxyRequestContext>();
@@ -122,8 +122,10 @@ namespace OAuthProxy.AspNetCore.Tests
             };
             var tokenService = new Mock<ITokenStorageService>();
             
-            tokenService.Setup(x => x.GetTokenAsync(It.Is<string>(s => s == "user1"), It.Is<string>(s => s == "serviceA"))).ReturnsAsync(expiredToken);
-            tokenService.Setup(x => x.RefreshTokenAsync(It.Is<string>(s => s == "user1"), It.Is<string>(s => s == "serviceA"), It.Is<string>(s => s == "refresh"))).ReturnsAsync(refreshedToken);
+            tokenService.Setup(x => x.GetTokenAsync(It.Is<string>(s => s == "user1"), It.Is<string>(s => s == "serviceA")))
+                .ReturnsAsync(expiredToken);
+            tokenService.Setup(x => x.RefreshTokenAsync(It.Is<string>(s => s == "user1"), It.Is<string>(s => s == "serviceA"), It.Is<string>(s => s == "refresh")))
+                .ReturnsAsync(refreshedToken);
             var userIdProvider = new Mock<IUserIdProvider>();
             userIdProvider.Setup(x => x.GetCurrentUserId()).Returns("user1");
             var proxyRequestContext = new Mock<IProxyRequestContext>();
@@ -152,7 +154,7 @@ namespace OAuthProxy.AspNetCore.Tests
             };
             var tokenService = new Mock<ITokenStorageService>();
             tokenService.Setup(x => x.GetTokenAsync("user1", "serviceA")).ReturnsAsync(expiredToken);
-            tokenService.Setup(x => x.RefreshTokenAsync("user1", "serviceA", "refresh")).ReturnsAsync((UserTokenDTO)null);
+            tokenService.Setup(x => x.RefreshTokenAsync("user1", "serviceA", "refresh")).ReturnsAsync((UserTokenDTO?)null);
             var userIdProvider = new Mock<IUserIdProvider>();
             userIdProvider.Setup(x => x.GetCurrentUserId()).Returns("user1");
             var proxyRequestContext = new Mock<IProxyRequestContext>();

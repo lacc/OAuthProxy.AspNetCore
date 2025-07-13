@@ -56,10 +56,10 @@ namespace OAuthProxy.AspNetCore.Tests
             var serviceName = "providerB";
             var refreshToken = "refreshB";
             var mockOptions = new Mock<IOptionsSnapshot<ThirdPartyProviderConfig>>();
-            ThirdPartyProviderConfig c = new ThirdPartyProviderConfig();
+            ThirdPartyProviderConfig c = new();
             mockOptions.Setup(x => x.Get(serviceName)).Returns(c);
 
-            var mockFactory = new Mock<AuthorizationFlowServiceFactory>(MockBehavior.Strict, new object[] { null! });
+            var mockFactory = new Mock<AuthorizationFlowServiceFactory>(MockBehavior.Strict, [null!]);
             var logger = new Mock<ILogger<RefreshTokenService>>().Object;
             var service = new RefreshTokenService(logger, mockFactory.Object, mockOptions.Object);
 
