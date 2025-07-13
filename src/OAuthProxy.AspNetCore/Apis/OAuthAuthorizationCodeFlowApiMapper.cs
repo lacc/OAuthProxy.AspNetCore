@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,9 +16,13 @@ namespace OAuthProxy.AspNetCore.Apis
     internal class OAuthAuthorizationCodeFlowApiMapper : IProxyApiMapper
     {
         private readonly ThirdPartyProviderConfig _providerConfig;
+        private readonly OAuthProxyConfiguration _proxyConfiguration;
         private readonly ILogger<OAuthAuthorizationCodeFlowApiMapper> _logger;
 
-        public OAuthAuthorizationCodeFlowApiMapper([ServiceKey] string serviceKey, IOptionsSnapshot<ThirdPartyProviderConfig> options, ILogger<OAuthAuthorizationCodeFlowApiMapper> logger)
+        public OAuthAuthorizationCodeFlowApiMapper([ServiceKey] string serviceKey, 
+            IOptionsSnapshot<ThirdPartyProviderConfig> options,
+            OAuthProxyConfiguration proxyConfiguration,
+            ILogger<OAuthAuthorizationCodeFlowApiMapper> logger)
         {
             _providerConfig = options.Get(serviceKey);
             if (_providerConfig == null)
@@ -27,6 +30,7 @@ namespace OAuthProxy.AspNetCore.Apis
                 throw new InvalidOperationException($"Configuration for service '{serviceKey}' not found.");
             }
 
+            _proxyConfiguration = proxyConfiguration;
             _logger = logger;
         }
 
@@ -35,7 +39,6 @@ namespace OAuthProxy.AspNetCore.Apis
         private ThirdPartyServiceConfig OAuthConfiguration => _providerConfig?.OAuthConfiguration ?? 
             throw new InvalidOperationException("OAuth configuration is not set for the service provider.");
         
-        public const string LocalRedirectUriParameterName = "local_redirect_uri";
         public RouteGroupBuilder MapProxyEndpoints(RouteGroupBuilder app)
         {
             string serviceName = ServiceProviderName;
@@ -59,7 +62,7 @@ namespace OAuthProxy.AspNetCore.Apis
             return app;
         }
         private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult, BadRequest<string>>> HandleAuthorize(
-            [FromQuery(Name = LocalRedirectUriParameterName)] string? localRedirectUri, HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
+            HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
         {
             var urlProvider = serviceFactory.GetAuthorizationUrlProvider(ServiceProviderName);
             if (urlProvider == null)
@@ -74,6 +77,10 @@ namespace OAuthProxy.AspNetCore.Apis
                 redirectUri = redirectUri.Replace(httpRequest.QueryString.Value, "");
             }
         
+            var localRedirectUri = httpRequest.Query.ContainsKey(_proxyConfiguration.ApiMapperConfiguration.AuthorizeRedirectUrlParameterName) ?
+                httpRequest.Query[_proxyConfiguration.ApiMapperConfiguration.AuthorizeRedirectUrlParameterName].ToString() :
+                string.Empty;
+
             var authorizeUrl = await urlProvider.GetAuthorizeUrlAsync(OAuthConfiguration, redirectUri);
             authorizeUrl = await stateService.DecorateWithStateAsync(ServiceProviderName, authorizeUrl, new AuthorizationStateParameters
             {
@@ -96,6 +103,10 @@ namespace OAuthProxy.AspNetCore.Apis
                 return TypedResults.Ok(authorizeUrl);
             }
 
+            //httpRequest.HttpContext.Response.Redirect(authorizeUrl, false);
+            //httpRequest.HttpContext.Response.StatusCode = StatusCodes.Status302Found;
+            //httpRequest.HttpContext.Response.Headers.Append("Location", authorizeUrl);
+            
             return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with temporary status code
         }
 
@@ -144,7 +155,17 @@ namespace OAuthProxy.AspNetCore.Apis
             return !string.IsNullOrEmpty(redirectUri) &&
                    Uri.TryCreate(redirectUri, UriKind.Absolute, out var _uri) &&
                     (_uri.Scheme == Uri.UriSchemeHttps ||
-                   (_providerConfig.AllowHttpRedirects && _uri.Scheme == Uri.UriSchemeHttp));
+                   (_providerConfig.AllowHttpRedirects && _uri.Scheme == Uri.UriSchemeHttp)) &&
+                   EnsureWhiteListedUrl(
+                       _proxyConfiguration.ApiMapperConfiguration.WhiteListedRedirectUrls, redirectUri);
+        }
+
+        private static bool EnsureWhiteListedUrl(IEnumerable<string> whiteListRedirectUrls, string redirectUrl)
+        {
+            return !whiteListRedirectUrls.Any() ||
+                whiteListRedirectUrls.Any(url => 
+                    url.Equals(redirectUrl, StringComparison.OrdinalIgnoreCase) ||
+                    (url.EndsWith('*') && redirectUrl.StartsWith(url.TrimEnd('*'), StringComparison.OrdinalIgnoreCase)));
         }
     }
 }
