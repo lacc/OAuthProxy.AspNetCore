@@ -38,6 +38,17 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
                 Path.Combine(AppContext.BaseDirectory, "keys")))
             .SetDefaultKeyLifetime(TimeSpan.FromDays(60));
     })
+    .ConfigureApiMapper(config =>
+    {
+        config.ProxyUrlPrefix = "api/oauth";
+        config.AuthorizeRedirectUrlParameterName = "local_redirect_uri";
+        config.WhiteListedRedirectUrls =
+        [
+            "https://localhost:5001/",
+            "https://localhost:5001/someRedirectPage"
+        ];
+        config.MapGenericApi = true;
+    })
     .AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
         .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
     .AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => proxyClientBuilder
