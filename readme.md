@@ -90,8 +90,8 @@ Follow these steps to set up and run the demo project:
    ```sh
    cd OAuthProxy.AspNetCore.Demo
    dotnet run
-   ```
-  The default configuration uses SQLite and db file with auto migration on startup.
+   ```  
+  > The default configuration uses SQLite and db file with auto migration on startup.
 
 4. **Authenticate:**
    - Start the authentication process by calling:
