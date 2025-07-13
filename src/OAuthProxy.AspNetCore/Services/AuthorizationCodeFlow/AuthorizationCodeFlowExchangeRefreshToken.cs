@@ -17,7 +17,7 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
             _logger = logger;
         }
 
-        public async Task<TokenExchangeResponse> ExchangeRefreshTokenAsync(ThirdPartyServiceConfig config, string refresh_token)
+        public async Task<TokenExchangeResponse> ExchangeRefreshTokenAsync(ThirdPartyServiceConfig config, string refreshToken)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, config.TokenEndpoint)
             {
@@ -26,7 +26,7 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
                     { "grant_type", "refresh_token" },
                     { "client_id", config.ClientId },
                     { "client_secret", config.ClientSecret },
-                    { "refresh_token", refresh_token }
+                    { "refresh_token", refreshToken }
                 })
             };
 
