@@ -117,8 +117,8 @@ namespace OAuthProxy.AspNetCore.Extensions
                             var handlerFactory = handlerFactoryConfig.Value(sp);
                             if (handlerFactory is null)
                             {
-                                throw new InvalidOperationException($"Handler for type {handlerObjectType.Name} could not be created. " +
-                                                                    "Ensure the handler is registered correctly in the service collection.");
+                                throw new InvalidOperationException($"The handler factory for type {handlerObjectType.Name} returned null. " +
+                                                                    "Ensure the factory function returns a valid handler instance.");
                             }
                             return handlerFactory;
                         });
