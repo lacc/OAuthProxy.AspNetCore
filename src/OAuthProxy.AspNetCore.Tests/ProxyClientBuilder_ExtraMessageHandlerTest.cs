@@ -9,7 +9,7 @@ using System.Net;
 
 namespace OAuthProxy.AspNetCore.Tests
 {
-    public class ProxyClientBuilder_ExtraMessangeHandlerTest
+    public class ProxyClientBuilder_ExtraMessageHandlerTest
     {
         private class  FakeProxyClient
         {
