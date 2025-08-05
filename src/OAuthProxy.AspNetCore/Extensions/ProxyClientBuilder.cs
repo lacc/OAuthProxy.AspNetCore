@@ -64,6 +64,7 @@ namespace OAuthProxy.AspNetCore.Extensions
         }
 
         public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>()
+            where TMessageHandler : DelegatingHandler
         {
             httpMessageHandlers.Add(typeof(TMessageHandler));
             return this;
@@ -127,7 +128,7 @@ namespace OAuthProxy.AspNetCore.Extensions
                     {
                         return delegatingHandler;
                     }
-                    throw new InvalidOperationException($"Handler type {handlerType.Name} does not implement DelegatingHandler.");
+                    throw new InvalidOperationException($"Handler type {handlerType.Name} must inherit from DelegatingHandler to be used as an HTTP message handler.");
                 });
             }
         }
