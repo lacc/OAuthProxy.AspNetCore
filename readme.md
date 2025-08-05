@@ -202,7 +202,7 @@ app.UseAuthentication();
 - **New Provider:** Add with `.AddOAuthServiceClient<TClient>("Name", ...)`.
 - **Custom Identity:** Use `.WithUserIdProvider<T>()`.
 - **Custom Tokens:** Implement `IOAuthAuthorizationTokenExchanger`.
-- **Httpp Client Message Handler:** Use `AddHttpMessageHandler` to customize HTTP requests.
+- **Http Client Message Handler:** Use `AddHttpMessageHandler` to customize HTTP requests.
 
 ## Configure the Library
 - Storage options
