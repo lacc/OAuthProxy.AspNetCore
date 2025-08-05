@@ -11,13 +11,12 @@ namespace OAuthProxy.AspNetCore.Tests
 {
     public class ProxyClientBuilder_ExtraMessageHandlerTest
     {
-        private class  FakeProxyClient
+        private class FakeProxyClient
         {
             
         }
         private class ExtraAHeaderHandler : DelegatingHandler
         {
-            
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 request.Headers.Add("X-Proxy", "A");
@@ -82,31 +81,22 @@ namespace OAuthProxy.AspNetCore.Tests
             userIdProvideMock.Setup(u => u.GetCurrentUserId()).Returns("test-user");
             services.AddSingleton(userIdProvideMock.Object);
 
-            // Handler for ProxyA
             var captureHandlerA = new CaptureRequestHandler();
-            services.AddKeyedScoped(typeof(CaptureRequestHandler), "ProxyA", (_, o) => captureHandlerA);
-            
-            // Handler for ProxyB
             var captureHandlerB = new CaptureRequestHandler();
-            services.AddKeyedScoped(typeof(CaptureRequestHandler), "ProxyB", (_, o) => captureHandlerB);
            
             // Register ProxyA
             new ProxyClientBuilder<FakeProxyClient>("ProxyA", services, configuration, "ThirdPartyClients")
                 .WithAuthorizationCodeFlow(configuration.GetSection("ThirdPartyClients:ProxyA"))
                 .AddHttpMessageHandler<ExtraAHeaderHandler>()
+                .AddHttpMessageHandler<CaptureRequestHandler>(sp => captureHandlerA)
                 .Build();
 
             // Register ProxyB
             new ProxyClientBuilder<FakeProxyClient>("ProxyB", services, configuration, "ThirdPartyClients")
                 .WithAuthorizationCodeFlow(configuration.GetSection("ThirdPartyClients:ProxyB"))
                 .AddHttpMessageHandler<ExtraBHeaderHandler>()
+                .AddHttpMessageHandler<CaptureRequestHandler>(sp => captureHandlerB)
                 .Build();
-
-            // Add HttpClient with capture handler at the end of the pipeline
-            services.AddHttpClient("ProxyA")
-                .AddHttpMessageHandler(_ => captureHandlerA);
-            services.AddHttpClient("ProxyB")
-                .AddHttpMessageHandler(_ => captureHandlerB);
 
             var provider = services.BuildServiceProvider();
 

@@ -20,7 +20,7 @@ namespace OAuthProxy.AspNetCore.Extensions
         public string ServiceProviderName { get; }
         public bool AllowHttpRedirects { get; set; } = false;
         private string DefaultConfigKey { get; }
-        private List<Type> httpMessageHandlers = [];
+        private Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _httpMessageHandlers = [];
 
         public ProxyClientBuilder(string serviceProviderName, IServiceCollection services, IConfiguration configuration, string configPrefix)
         {
@@ -63,10 +63,10 @@ namespace OAuthProxy.AspNetCore.Extensions
             return this;
         }
 
-        public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>()
+        public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>(Func<IServiceProvider, DelegatingHandler> action  = null)
             where TMessageHandler : DelegatingHandler
         {
-            httpMessageHandlers.Add(typeof(TMessageHandler));
+            _httpMessageHandlers.Add(typeof(TMessageHandler), action);
             return this;
         }
         public void Build()
@@ -96,9 +96,26 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             _services.AddScoped<TClient>();
 
-            foreach (var handlerType in httpMessageHandlers)
+            foreach (var handlerType in _httpMessageHandlers)
             {
-                _services.AddKeyedScoped(handlerType, _builderOption.ServiceProviderName);
+                if(handlerType.Value == null)
+                {
+                    _services.AddKeyedScoped(handlerType.Key, _builderOption.ServiceProviderName);
+                }
+                else
+                {
+                    _services.AddKeyedScoped(handlerType.Key, _builderOption.ServiceProviderName, 
+                        (sp, o ) =>
+                        {
+                            var handler = handlerType.Value(sp);
+                            if (handler is null)
+                            {
+                                throw new InvalidOperationException($"Handler for type {handlerType.Key.Name} could not be created. " +
+                                                                    "Ensure the handler is registered correctly in the service collection.");
+                            }
+                            return handler;
+                        });
+                }
             }
 
             var httpClientBuilder = _services
@@ -119,16 +136,12 @@ namespace OAuthProxy.AspNetCore.Extensions
                     var res = sp.GetRequiredService<BasicOAuthBearerTokenHandler>();
                     return res;
                 });
-            foreach (var handlerType in httpMessageHandlers)
+            foreach (var handlerType in _httpMessageHandlers)
             {
                 httpClientBuilder.AddHttpMessageHandler((sp) =>
                 {
-                    var handler = sp.GetRequiredKeyedService(handlerType, _builderOption.ServiceProviderName);
-                    if (handler is DelegatingHandler delegatingHandler)
-                    {
-                        return delegatingHandler;
-                    }
-                    throw new InvalidOperationException($"Handler type {handlerType.Name} must inherit from DelegatingHandler to be used as an HTTP message handler.");
+                    var handler = sp.GetRequiredKeyedService(handlerType.Key, _builderOption.ServiceProviderName);
+                    return (DelegatingHandler)handler;
                 });
             }
         }
