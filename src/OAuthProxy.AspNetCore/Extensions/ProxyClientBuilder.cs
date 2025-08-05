@@ -16,10 +16,11 @@ namespace OAuthProxy.AspNetCore.Extensions
         private readonly IServiceCollection _services;
         private readonly IConfiguration _configuration;
         private readonly string _configPrefix;
+        private readonly Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _messageHandlerFactories = [];
 
         public string ServiceProviderName { get; }
         public bool AllowHttpRedirects { get; set; } = false;
-        private string DefaultConfigKey { get; } 
+        private string DefaultConfigKey { get; }
 
         public ProxyClientBuilder(string serviceProviderName, IServiceCollection services, IConfiguration configuration, string configPrefix)
         {
@@ -62,6 +63,16 @@ namespace OAuthProxy.AspNetCore.Extensions
             return this;
         }
 
+        public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>(Func<IServiceProvider, DelegatingHandler>? handlerFactory = null)
+            where TMessageHandler : DelegatingHandler
+        {
+            if (_messageHandlerFactories.ContainsKey(typeof(TMessageHandler)))
+            {
+                throw new InvalidOperationException($"A message handler of type {typeof(TMessageHandler).Name} is already registered.");
+            }
+            _messageHandlerFactories.Add(typeof(TMessageHandler), handlerFactory);
+            return this;
+        }
 
         public void Build()
         {
@@ -90,7 +101,31 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             _services.AddScoped<TClient>();
 
-            _services
+            foreach (var handlerFactoryConfig in _messageHandlerFactories)
+            {
+                var handlerObjectType = handlerFactoryConfig.Key;
+                if (handlerFactoryConfig.Value == null)
+                {
+                    _services.AddScoped(handlerObjectType);
+                    _services.AddKeyedScoped(handlerObjectType, _builderOption.ServiceProviderName);
+                }
+                else
+                {
+                    _services.AddKeyedScoped(handlerObjectType, _builderOption.ServiceProviderName, 
+                        (sp, o) =>
+                        {
+                            var handlerFactory = handlerFactoryConfig.Value(sp);
+                            if (handlerFactory is null)
+                            {
+                                throw new InvalidOperationException($"The handler factory for type {handlerObjectType.Name} returned null. " +
+                                                                    "Ensure the factory function returns a valid handler instance.");
+                            }
+                            return handlerFactory;
+                        });
+                }
+            }
+
+            var httpClientBuilder = _services
                 .AddHttpClient(_builderOption.ServiceProviderName, client =>
                 {
                     var timeout = _configuration.GetValue<int?>("HttpClientTimeoutSeconds") ??
@@ -106,10 +141,16 @@ namespace OAuthProxy.AspNetCore.Extensions
                         .SetServiceName(_builderOption.ServiceProviderName);
 
                     var res = sp.GetRequiredService<BasicOAuthBearerTokenHandler>();
-
                     return res;
                 });
-            
+            foreach (var handlerFactoryConfig in _messageHandlerFactories)
+            {
+                httpClientBuilder.AddHttpMessageHandler((sp) =>
+                {
+                    var handler = sp.GetRequiredKeyedService(handlerFactoryConfig.Key, _builderOption.ServiceProviderName);
+                    return (DelegatingHandler)handler;
+                });
+            }
         }
     }
 }

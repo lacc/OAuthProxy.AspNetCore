@@ -51,16 +51,22 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
     })
     .AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
         .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
-    .AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => proxyClientBuilder
-        .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
-        {
-            builder.ConfigureTokenExchanger<DummyCodeExchanger>();
-        }))
+    .AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => 
+    {
+        proxyClientBuilder.AllowHttpRedirects = true;
+        proxyClientBuilder
+            .AddHttpMessageHandler<DummyHttpMessageHandler>()
+            .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
+            {
+                builder.ConfigureTokenExchanger<DummyCodeExchanger>();
+            });
+    }
 //.AddOAuthServiceClient<ThirdPartyClientA>("Nuk", proxyClientBuilder => proxyClientBuilder
 //    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA"), builder =>
 //    {
 //        builder.ConfigureTokenExchanger<DummyCodeExchanger>();
-//    }))
+//    })
+)
 );
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
