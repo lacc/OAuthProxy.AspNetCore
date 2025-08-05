@@ -202,7 +202,7 @@ app.UseAuthentication();
 - **New Provider:** Add with `.AddOAuthServiceClient<TClient>("Name", ...)`.
 - **Custom Identity:** Use `.WithUserIdProvider<T>()`.
 - **Custom Tokens:** Implement `IOAuthAuthorizationTokenExchanger`.
-- **Http Client Message Handler:** Use `AddHttpMessageHandler` to customize HTTP requests.
+- **HTTP Client Message Handler:** Use `AddHttpMessageHandler` to customize HTTP requests.
 
 ## Configure the Library
 - Storage options
@@ -266,7 +266,7 @@ app.UseAuthentication();
   ```
   - Optionally use `ConfigureTokenExchanger` to replace the default token exchanger service
 
-- Extend with custom Http Client Message Handler
+- Extend with custom HTTP Client Message Handler
   - Create a new class for the message handler:
  
     ```csharp
