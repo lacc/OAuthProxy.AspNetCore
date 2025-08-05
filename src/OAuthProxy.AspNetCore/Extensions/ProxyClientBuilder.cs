@@ -16,11 +16,11 @@ namespace OAuthProxy.AspNetCore.Extensions
         private readonly IServiceCollection _services;
         private readonly IConfiguration _configuration;
         private readonly string _configPrefix;
+        private readonly Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _httpMessageHandlers = [];
 
         public string ServiceProviderName { get; }
         public bool AllowHttpRedirects { get; set; } = false;
         private string DefaultConfigKey { get; }
-        private Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _httpMessageHandlers = [];
 
         public ProxyClientBuilder(string serviceProviderName, IServiceCollection services, IConfiguration configuration, string configPrefix)
         {
