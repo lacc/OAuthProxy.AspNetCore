@@ -16,7 +16,7 @@ namespace OAuthProxy.AspNetCore.Extensions
         private readonly IServiceCollection _services;
         private readonly IConfiguration _configuration;
         private readonly string _configPrefix;
-        private readonly Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _httpMessageHandlers = [];
+        private readonly Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _customMessageHandlers = [];
 
         public string ServiceProviderName { get; }
         public bool AllowHttpRedirects { get; set; } = false;
@@ -66,7 +66,7 @@ namespace OAuthProxy.AspNetCore.Extensions
         public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>(Func<IServiceProvider, DelegatingHandler>? action = null)
             where TMessageHandler : DelegatingHandler
         {
-            _httpMessageHandlers.Add(typeof(TMessageHandler), action);
+            _customMessageHandlers.Add(typeof(TMessageHandler), action);
             return this;
         }
 
@@ -97,11 +97,12 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             _services.AddScoped<TClient>();
 
-            foreach (var handlerType in _httpMessageHandlers)
+            foreach (var handlerType in _customMessageHandlers)
             {
                 var handlerObjectType = handlerType.Key;
                 if (handlerType.Value == null)
                 {
+                    _services.AddScoped(handlerObjectType);
                     _services.AddKeyedScoped(handlerObjectType, _builderOption.ServiceProviderName);
                 }
                 else
@@ -138,7 +139,7 @@ namespace OAuthProxy.AspNetCore.Extensions
                     var res = sp.GetRequiredService<BasicOAuthBearerTokenHandler>();
                     return res;
                 });
-            foreach (var handlerType in _httpMessageHandlers)
+            foreach (var handlerType in _customMessageHandlers)
             {
                 httpClientBuilder.AddHttpMessageHandler((sp) =>
                 {
