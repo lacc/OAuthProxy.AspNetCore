@@ -63,10 +63,14 @@ namespace OAuthProxy.AspNetCore.Extensions
             return this;
         }
 
-        public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>(Func<IServiceProvider, DelegatingHandler>? action = null)
+        public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>(Func<IServiceProvider, DelegatingHandler>? handlerFactory = null)
             where TMessageHandler : DelegatingHandler
         {
-            _messageHandlerFactories.Add(typeof(TMessageHandler), action);
+            if (_messageHandlerFactories.ContainsKey(typeof(TMessageHandler)))
+            {
+                throw new InvalidOperationException($"A message handler of type {typeof(TMessageHandler).Name} is already registered.");
+            }
+            _messageHandlerFactories.Add(typeof(TMessageHandler), handlerFactory);
             return this;
         }
 
@@ -110,13 +114,13 @@ namespace OAuthProxy.AspNetCore.Extensions
                     _services.AddKeyedScoped(handlerObjectType, _builderOption.ServiceProviderName, 
                         (sp, o) =>
                         {
-                            var handler = handlerFactoryConfig.Value(sp);
-                            if (handler is null)
+                            var handlerFactory = handlerFactoryConfig.Value(sp);
+                            if (handlerFactory is null)
                             {
                                 throw new InvalidOperationException($"Handler for type {handlerObjectType.Name} could not be created. " +
                                                                     "Ensure the handler is registered correctly in the service collection.");
                             }
-                            return handler;
+                            return handlerFactory;
                         });
                 }
             }
