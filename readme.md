@@ -202,16 +202,17 @@ app.UseAuthentication();
 - **New Provider:** Add with `.AddOAuthServiceClient<TClient>("Name", ...)`.
 - **Custom Identity:** Use `.WithUserIdProvider<T>()`.
 - **Custom Tokens:** Implement `IOAuthAuthorizationTokenExchanger`.
+- **Httpp Client Message Handler:** Use `AddHttpMessageHandler` to customize HTTP requests.
 
 ## Configure the Library
 - Storage options
   ```csharp
-  proxyBuilder
-    .WithTokenStorageOptions(options => 
-    {
-      options.AutoMigration = true;
-      options.DatabaseOptions = dbOptions => dbOptions.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection"));
-    })
+    proxyBuilder
+      .WithTokenStorageOptions(options => 
+      {
+        options.AutoMigration = true;
+        options.DatabaseOptions = dbOptions => dbOptions.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection"));
+      })
   ```
     - Auto migration on startup: `options.AutoMigration` (default false)
     - EF database configuration: `options.DatabaseOptions`
@@ -254,16 +255,42 @@ app.UseAuthentication();
 
 - Configure 3rd party service
   ```csharp
-  proxyBuilder.AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
-    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
+    proxyBuilder.AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
+      .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
     
-  proxyBuilder.AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => proxyClientBuilder
-    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
-    {
-        builder.ConfigureTokenExchanger<DummyCodeExchanger>();
-    }))
+    proxyBuilder.AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => proxyClientBuilder
+      .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
+      {
+          builder.ConfigureTokenExchanger<DummyCodeExchanger>();
+      }))
   ```
   - Optionally use `ConfigureTokenExchanger` to replace the default token exchanger service
+
+- Extend with custom Http Client Message Handler
+  - Create a new class for the message handler:
+ 
+    ```csharp
+    public class DummyHttpMessageHandler : DelegatingHandler
+    {
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+                  HttpRequestMessage request,
+                  CancellationToken cancellationToken)
+        {
+            request.Headers.Add("X-Api-Key", "TestKey");
+
+            return await base.SendAsync(request, cancellationToken);
+
+        }
+    }
+    ```
+  - Register the handler in the proxy client builder:
+  
+    ```csharp
+      proxyClientBuilder
+            .AddHttpMessageHandler<DummyHttpMessageHandler>()
+            .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"));
+    ```
 
 ## Example: Custom Endpoint with Minimal APIs
 Here’s how to create a custom endpoint using ASP.NET Core minimal APIs, which offers more control than the generic proxy:
@@ -311,6 +338,20 @@ dotnet test
 ```
 
 ---
+
+### Enable not secure HTTP redirects
+HTTP redirects instead of HTTPS can be enabled by proxy client by setting the `AllowHttpRedirects` to true.
+
+> **Note:** Use this with caution only for testing purposes, as it can expose sensitive data over insecure connections.
+```csharp
+  .AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => 
+  {
+        proxyClientBuilder.AllowHttpRedirects = true;
+        proxyClientBuilder
+            .AddHttpMessageHandler<DummyHttpMessageHandler>()
+            .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"));
+  }
+```
 
 ## Contributing
 

@@ -19,7 +19,8 @@ namespace OAuthProxy.AspNetCore.Extensions
 
         public string ServiceProviderName { get; }
         public bool AllowHttpRedirects { get; set; } = false;
-        private string DefaultConfigKey { get; } 
+        private string DefaultConfigKey { get; }
+        private List<Type> httpMessageHandlers = [];
 
         public ProxyClientBuilder(string serviceProviderName, IServiceCollection services, IConfiguration configuration, string configPrefix)
         {
@@ -62,7 +63,11 @@ namespace OAuthProxy.AspNetCore.Extensions
             return this;
         }
 
-
+        public ProxyClientBuilder<TClient> AddHttpMessageHandler<THttpClientHeaderExtension>()
+        {
+            httpMessageHandlers.Add(typeof(THttpClientHeaderExtension));
+            return this;
+        }
         public void Build()
         {
             if (_builderOption.OAuthConfiguration == null)
@@ -90,7 +95,12 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             _services.AddScoped<TClient>();
 
-            _services
+            foreach (var handlerType in httpMessageHandlers)
+            {
+                _services.AddKeyedScoped(handlerType, _builderOption.ServiceProviderName);
+            }
+
+            var httpClientBuilder = _services
                 .AddHttpClient(_builderOption.ServiceProviderName, client =>
                 {
                     var timeout = _configuration.GetValue<int?>("HttpClientTimeoutSeconds") ??
@@ -106,10 +116,20 @@ namespace OAuthProxy.AspNetCore.Extensions
                         .SetServiceName(_builderOption.ServiceProviderName);
 
                     var res = sp.GetRequiredService<BasicOAuthBearerTokenHandler>();
-
                     return res;
                 });
-            
+            foreach (var handlerType in httpMessageHandlers)
+            {
+                httpClientBuilder.AddHttpMessageHandler((sp) =>
+                {
+                    var handler = sp.GetRequiredKeyedService(handlerType, _builderOption.ServiceProviderName);
+                    if (handler is DelegatingHandler delegatingHandler)
+                    {
+                        return delegatingHandler;
+                    }
+                    throw new InvalidOperationException($"Handler type {handlerType.Name} does not implement DelegatingHandler.");
+                }); ;
+            }
         }
     }
 }

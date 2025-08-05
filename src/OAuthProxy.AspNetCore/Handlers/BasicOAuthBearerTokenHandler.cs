@@ -11,7 +11,6 @@ namespace OAuthProxy.AspNetCore.Handlers
         private readonly IProxyRequestContext _proxyRequestContext;
         private readonly ILogger<BasicOAuthBearerTokenHandler> _logger;
 
-
         public BasicOAuthBearerTokenHandler(ITokenStorageService tokenService, IUserIdProvider userIdProvider, IProxyRequestContext proxyRequestContext, ILogger<BasicOAuthBearerTokenHandler> logger)
         {
             _tokenService = tokenService;
@@ -93,6 +92,7 @@ namespace OAuthProxy.AspNetCore.Handlers
             }
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
+            
             return await base.SendAsync(request, cancellationToken);
         }
     }
