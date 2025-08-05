@@ -16,7 +16,7 @@ namespace OAuthProxy.AspNetCore.Extensions
         private readonly IServiceCollection _services;
         private readonly IConfiguration _configuration;
         private readonly string _configPrefix;
-        private readonly Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _customMessageHandlers = [];
+        private readonly Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _messageHandlerFactories = [];
 
         public string ServiceProviderName { get; }
         public bool AllowHttpRedirects { get; set; } = false;
@@ -66,7 +66,7 @@ namespace OAuthProxy.AspNetCore.Extensions
         public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>(Func<IServiceProvider, DelegatingHandler>? action = null)
             where TMessageHandler : DelegatingHandler
         {
-            _customMessageHandlers.Add(typeof(TMessageHandler), action);
+            _messageHandlerFactories.Add(typeof(TMessageHandler), action);
             return this;
         }
 
@@ -97,10 +97,10 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             _services.AddScoped<TClient>();
 
-            foreach (var handlerType in _customMessageHandlers)
+            foreach (var handlerFactoryConfig in _messageHandlerFactories)
             {
-                var handlerObjectType = handlerType.Key;
-                if (handlerType.Value == null)
+                var handlerObjectType = handlerFactoryConfig.Key;
+                if (handlerFactoryConfig.Value == null)
                 {
                     _services.AddScoped(handlerObjectType);
                     _services.AddKeyedScoped(handlerObjectType, _builderOption.ServiceProviderName);
@@ -110,7 +110,7 @@ namespace OAuthProxy.AspNetCore.Extensions
                     _services.AddKeyedScoped(handlerObjectType, _builderOption.ServiceProviderName, 
                         (sp, o) =>
                         {
-                            var handler = handlerType.Value(sp);
+                            var handler = handlerFactoryConfig.Value(sp);
                             if (handler is null)
                             {
                                 throw new InvalidOperationException($"Handler for type {handlerObjectType.Name} could not be created. " +
@@ -139,11 +139,11 @@ namespace OAuthProxy.AspNetCore.Extensions
                     var res = sp.GetRequiredService<BasicOAuthBearerTokenHandler>();
                     return res;
                 });
-            foreach (var handlerType in _customMessageHandlers)
+            foreach (var handlerFactoryConfig in _messageHandlerFactories)
             {
                 httpClientBuilder.AddHttpMessageHandler((sp) =>
                 {
-                    var handler = sp.GetRequiredKeyedService(handlerType.Key, _builderOption.ServiceProviderName);
+                    var handler = sp.GetRequiredKeyedService(handlerFactoryConfig.Key, _builderOption.ServiceProviderName);
                     return (DelegatingHandler)handler;
                 });
             }
