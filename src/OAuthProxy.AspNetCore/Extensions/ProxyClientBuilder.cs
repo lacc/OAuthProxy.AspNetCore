@@ -63,12 +63,13 @@ namespace OAuthProxy.AspNetCore.Extensions
             return this;
         }
 
-        public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>(Func<IServiceProvider, DelegatingHandler> action  = null)
+        public ProxyClientBuilder<TClient> AddHttpMessageHandler<TMessageHandler>(Func<IServiceProvider, DelegatingHandler>? action = null)
             where TMessageHandler : DelegatingHandler
         {
             _httpMessageHandlers.Add(typeof(TMessageHandler), action);
             return this;
         }
+
         public void Build()
         {
             if (_builderOption.OAuthConfiguration == null)
@@ -98,19 +99,20 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             foreach (var handlerType in _httpMessageHandlers)
             {
-                if(handlerType.Value == null)
+                var handlerObjectType = handlerType.Key;
+                if (handlerType.Value == null)
                 {
-                    _services.AddKeyedScoped(handlerType.Key, _builderOption.ServiceProviderName);
+                    _services.AddKeyedScoped(handlerObjectType, _builderOption.ServiceProviderName);
                 }
                 else
                 {
-                    _services.AddKeyedScoped(handlerType.Key, _builderOption.ServiceProviderName, 
-                        (sp, o ) =>
+                    _services.AddKeyedScoped(handlerObjectType, _builderOption.ServiceProviderName, 
+                        (sp, o) =>
                         {
                             var handler = handlerType.Value(sp);
                             if (handler is null)
                             {
-                                throw new InvalidOperationException($"Handler for type {handlerType.Key.Name} could not be created. " +
+                                throw new InvalidOperationException($"Handler for type {handlerObjectType.Name} could not be created. " +
                                                                     "Ensure the handler is registered correctly in the service collection.");
                             }
                             return handler;
