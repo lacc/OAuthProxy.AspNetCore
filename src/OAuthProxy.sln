@@ -8,6 +8,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthProxy.AspNetCore.Demo"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthProxy.AspNetCore.Tests", "OAuthProxy.AspNetCore.Tests\OAuthProxy.AspNetCore.Tests.csproj", "{8634740B-727F-438C-A11C-53146D0DF4C5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github.workflows", "github.workflows", "{047E0695-0AF0-4C8E-ADA0-92CF01792C35}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\cicd_publish_nuget.yaml = ..\.github\workflows\cicd_publish_nuget.yaml
+		..\.github\workflows\co_for_pr.yaml = ..\.github\workflows\co_for_pr.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +37,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{047E0695-0AF0-4C8E-ADA0-92CF01792C35} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3573A3B1-4ADA-4CE3-BB3D-AD25AEBF88B4}
