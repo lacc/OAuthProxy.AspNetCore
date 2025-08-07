@@ -8,7 +8,7 @@
     <Version>2.2.0</Version>
     <Authors>lacc</Authors>
     <PackageId>OAuthProxy.AspNetCore</PackageId>
-    <PackageDescription>OAuthProxy.AspNetCore is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy.</PackageDescription>
+    <PackageDescription>OAuthProxy.AspNetCore is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy. It uses Entity Framework Core for token storage and supports any EF Core-compatible database provider.</PackageDescription>
     <RepositoryUrl>https://github.com/lacc/OAuthProxy.AspNetCore</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>oauth, aspnetcore, authentication, proxy, entityframeworkcore</PackageTags>
@@ -16,13 +16,6 @@
     <PackageProjectUrl>https://github.com/lacc/OAuthProxy.AspNetCore</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Abstractions\ILocalRedirectUrlProvider.cs" />
-    <Compile Remove="Handlers\OAuthProxyMiddleware.cs" />
-    <Compile Remove="Services\LocalRedirectUrlProvider.cs" />
-    <Compile Remove="Services\TokenCacheService.cs" />
-  </ItemGroup>
   
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
