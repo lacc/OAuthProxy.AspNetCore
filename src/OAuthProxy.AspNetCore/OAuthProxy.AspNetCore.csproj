@@ -7,8 +7,14 @@
 
     <Version>2.2.0</Version>
     <Authors>lacc</Authors>
+    <PackageId>OAuthProxy.AspNetCore</PackageId>
     <PackageDescription>OAuthProxy.AspNetCore is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy.</PackageDescription>
     <RepositoryUrl>https://github.com/lacc/OAuthProxy.AspNetCore</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>oauth, aspnetcore, authentication, proxy, entityframeworkcore</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/lacc/OAuthProxy.AspNetCore</PackageProjectUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,9 +34,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.7" />
-    <!--<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />-->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
   
   <ItemGroup>
