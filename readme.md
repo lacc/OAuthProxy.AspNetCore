@@ -220,9 +220,9 @@ app.UseAuthentication();
     - Auto migration on startup: `options.AutoMigration` (default false)
     - EF database configuration: `options.DatabaseOptions`
       You must also add the EF Core provider package for your chosen database. For example:
-      - SQLite: `dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 9.0.7`
-      - SQL Server: `dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 9.0.7`
-      - PostgreSQL: `dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 9.0.7`
+      - SQLite: `dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 9.0.8`
+      - SQL Server: `dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 9.0.8`
+      - PostgreSQL: `dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 9.0.8`
 
 
 - Configure dotnet [Data Protection](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/introduction)
