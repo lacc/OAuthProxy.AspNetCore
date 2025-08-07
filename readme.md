@@ -5,7 +5,7 @@
 [![CodeQL](https://github.com/lacc/OAuthProxy/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/lacc/OAuthProxy/actions/workflows/github-code-scanning/codeql)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#license)
 
-**OAuthProxy.AspNetCore** is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy. It handles authorization, token storage, and state management, making it ideal for backend APIs that need to interact with multiple external OAuth providers without exposing sensitive credentials in client applications.
+**OAuthProxy.AspNetCore** is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy. It handles authorization, token storage, and state management, making it ideal for backend APIs that need to interact with multiple external OAuth providers without exposing sensitive credentials in client applications. It uses Entity Framework Core for token storage and supports any EF Core-compatible database provider (e.g., SQLite, SQL Server, PostgreSQL, InMemory).
 
 ## Key Benefits
 
@@ -110,7 +110,10 @@ Follow these steps to set up and run the demo project:
 - **Generic Proxy Behavior:** The library registers a mapper for all endpoints under the client config name (e.g., `ServiceA`). This means every request to `/api/proxy/ServiceA/*` is proxied directly to the third-party provider without validation. While this is useful for testing, it’s not ideal for production due to limited control and security risks.
 - **Recommendation:** Create your own endpoints instead of relying on the generic proxy. Use the configured `HttpClient` (requested via `FromKeyedServices`) to call third-party endpoints and process the results according to your project’s needs.
 - **Using `HttpClient`:** When creating custom endpoints, request the `HttpClient` with `FromKeyedServices("ServiceA")` to ensure it’s pre-configured with authentication tokens.
-
+- **EF Core and migrations**
+  - The library includes a DbContext with pre-built migrations, which are applied automatically if AutoMigration is enabled.
+  - No design-time tools (e.g., Microsoft.EntityFrameworkCore.Design) are required in consuming projects.
+  - The library is provider-agnostic. You must include the appropriate EF Core provider package (e.g., Microsoft.EntityFrameworkCore.Sqlite, Microsoft.EntityFrameworkCore.SqlServer) in your project based on your database choice.
 ---
 
 ## Configuration
@@ -216,6 +219,12 @@ app.UseAuthentication();
   ```
     - Auto migration on startup: `options.AutoMigration` (default false)
     - EF database configuration: `options.DatabaseOptions`
+      You must also add the EF Core provider package for your chosen database. For example:
+      - SQLite: `dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 9.0.8`
+      - SQL Server: `dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 9.0.8`
+      - PostgreSQL: `dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 9.0.8`
+
+
 - Configure dotnet [Data Protection](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/introduction)
   ```csharp
   proxyBuilder.ConfigureDataProtector(builder =>
