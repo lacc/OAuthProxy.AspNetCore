@@ -4,6 +4,11 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <Version>2.2.0</Version>
+    <Authors>lacc</Authors>
+    <PackageDescription>OAuthProxy.AspNetCore is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy.</PackageDescription>
+    <RepositoryUrl>https://github.com/lacc/OAuthProxy.AspNetCore</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
