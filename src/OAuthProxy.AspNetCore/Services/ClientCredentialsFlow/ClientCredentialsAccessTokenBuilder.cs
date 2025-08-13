@@ -12,7 +12,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
         private readonly IOptionsSnapshot<ThirdPartyProviderConfig> _options;
         private readonly ILogger<ClientCredentialsAccessTokenBuilder> _logger;
 
-        public const string NoRefreshTokenValue = "";
+        public const string NoRefreshTokenValue = null;
         public ClientCredentialsAccessTokenBuilder(ITokenStorageService tokenService, 
             AuthorizationFlowServiceFactory authorizationFlowServiceFactory, IOptionsSnapshot<ThirdPartyProviderConfig> options, ILogger<ClientCredentialsAccessTokenBuilder> logger)
         {
@@ -44,16 +44,6 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             }
 
             var clientCredentialsExchanger = _authorizationFlowServiceFactory.GetClientCredentialsTokenExchanger(serviceName);
-            if (clientCredentialsExchanger == null)
-            {
-                _logger.LogWarning("Access token is not available for user {UserId} and service {ServiceName}.", userId, serviceName);
-
-                return new AccessTokenBuilderResponse
-                {
-                    ErrorMessage = "Access token is not available.",
-                    StatusCode = System.Net.HttpStatusCode.Unauthorized
-                };
-            }
 
             try
             {
