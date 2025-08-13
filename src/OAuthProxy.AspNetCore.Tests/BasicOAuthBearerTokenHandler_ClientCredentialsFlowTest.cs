@@ -1,7 +1,5 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
 using OAuthProxy.AspNetCore.Abstractions;
@@ -9,17 +7,15 @@ using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Handlers;
 using OAuthProxy.AspNetCore.Models;
 using OAuthProxy.AspNetCore.Services;
-using OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow;
 using OAuthProxy.AspNetCore.Services.ClientCredentialsFlow;
-using OAuthProxy.AspNetCore.Services.StateManagement;
-using System;
 using System.Net;
-using System.Net.Http.Json;
 
 namespace OAuthProxy.AspNetCore.Tests
 {
     public class BasicOAuthBearerTokenHandler_ClientCredentialsFlowTest
     {
+        private const int _tokenExpirationInDays = 30;
+
         private static HttpMessageInvoker CreateInvoker(
             string serviceProviderName,
             ITokenStorageService tokenService,
@@ -90,6 +86,7 @@ namespace OAuthProxy.AspNetCore.Tests
                     ClientId = "client-id",
                     ClientSecret = "client-secret",
                     TokenEndpoint = "https://api.example.com/token",
+                    TokenExpirationInDays = _tokenExpirationInDays,
                 };
             });
 
@@ -108,7 +105,7 @@ namespace OAuthProxy.AspNetCore.Tests
 
 
         [Fact]
-        public async Task SendAsync_RequestsTokenFirstTime_IfTokenMissing()
+        public async Task SendAsync_IfTokenMissing_RequestsTokenFirstTime_Success()
         {
             var tokenService = new Mock<ITokenStorageService>();
             tokenService.Setup(x => x.GetTokenAsync("user1", "serviceA")).ReturnsAsync((UserTokenDTO?)null);
@@ -121,6 +118,15 @@ namespace OAuthProxy.AspNetCore.Tests
             var response = await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://test"), CancellationToken.None);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            tokenService.Verify(x => x.SaveTokenAsync(
+                    "user1",
+                    "serviceA",
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.Is<DateTime>(dt =>
+                        Math.Abs((dt - DateTime.UtcNow.AddDays(_tokenExpirationInDays)).TotalSeconds) < 5
+                    )),
+                Times.Once);
         }
 
         [Fact]
@@ -131,7 +137,6 @@ namespace OAuthProxy.AspNetCore.Tests
                 ServiceName = "serviceA",
                 UserId = "user1",
                 AccessToken = "expired",
-                RefreshToken = null,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(-10)
             };
             var tokenService = new Mock<ITokenStorageService>();
@@ -154,9 +159,7 @@ namespace OAuthProxy.AspNetCore.Tests
             {
                 ServiceName = "serviceA",
                 UserId = "user1",
-                AccessToken = "expired",
-                RefreshToken = "refresh",
-                ExpiresAt = DateTime.UtcNow.AddMinutes(-10)
+                AccessToken = "expired"
             };
             var tokenService = new Mock<ITokenStorageService>();
             tokenService.Setup(x => x.GetTokenAsync("user1", "serviceA")).ReturnsAsync(expiredToken);
@@ -202,8 +205,7 @@ namespace OAuthProxy.AspNetCore.Tests
                 ServiceName = "serviceA",
                 UserId = "user1",
                 AccessToken = "validtoken",
-                RefreshToken = "refresh",
-                ExpiresAt = DateTime.UtcNow.AddMinutes(10)
+                ExpiresAt = DateTime.UtcNow.AddMinutes(30)
             };
             var tokenService = new Mock<ITokenStorageService>();
             tokenService.Setup(x => x.GetTokenAsync("user1", "serviceA")).ReturnsAsync(validToken);

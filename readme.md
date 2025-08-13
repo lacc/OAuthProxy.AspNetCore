@@ -135,7 +135,8 @@ The expiration of the Access Token is 1 year if not specified otherwise by the p
           "ClientSecret": "your-client-secret", 
           "TokenEndpoint": "https://provider.com/oauth/token", 
           "ApiBaseUrl": "https://api.provider.com", 
-          "Scopes": "read write" 
+          "Scopes": "read write",
+          "TokenExpirationInDays":  30  //Only if provider doesn't specify expiration. Default is 360
         } 
    }
    ```
@@ -154,6 +155,9 @@ The expiration of the Access Token is 1 year if not specified otherwise by the p
 - The client credentials flow does not require user interaction or redirection.
 - Tokens are securely stored and managed by the library.
 - You can customize the token exchanger by using `.ConfigureTokenExchanger<T>()` on the client builder.
+- There is no token renewal process in this flow; tokens are valid until they expire or are revoked by the provider.
+- Token expiration is defined by the provider or can be configured in the `appsettings.json` file under the `TokenExpirationInDays` property. 
+  If not specified, the default is 360 days.
 
 ## Configuration
 
