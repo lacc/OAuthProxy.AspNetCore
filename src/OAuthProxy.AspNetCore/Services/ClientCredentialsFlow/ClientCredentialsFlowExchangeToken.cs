@@ -13,7 +13,8 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
         /// 360 days was chosen to ensure long-lived tokens for services that do not provide expiration information.
         /// Configure through TokenExpirationInDays in client appsettings configuration.
         /// </summary>
-        private static readonly TimeSpan _defaultTokenExpiration = TimeSpan.FromDays(360);
+        private const int _defaultTokenExpirationInDays = 360;
+        private static readonly TimeSpan _defaultTokenExpiration = TimeSpan.FromDays(_defaultTokenExpirationInDays);
 
         private readonly HttpClient _httpClient;
         private readonly ILogger<ClientCredentialsFlowExchangeToken> _logger;

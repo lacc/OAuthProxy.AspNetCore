@@ -11,21 +11,22 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
 
         public ClientCredentialsFlowServiceBuilder(string serviceProviderName, IServiceCollection services)
         {
-            ConfigureDefaultServices(serviceProviderName);
-
             _serviceProviderName = serviceProviderName;
             _services = services;
+
+            ConfigureDefaultServices();
+
         }
 
-        private ClientCredentialsFlowServiceBuilder ConfigureDefaultServices(string serviceProviderName)
+        private ClientCredentialsFlowServiceBuilder ConfigureDefaultServices()
         {
-            if (string.IsNullOrWhiteSpace(serviceProviderName))
+            if (string.IsNullOrWhiteSpace(_serviceProviderName))
             {
-                throw new ArgumentException("Service provider name cannot be null or empty.", nameof(serviceProviderName));
+                throw new ArgumentException("Service provider name cannot be null or empty.", nameof(_serviceProviderName));
             }
             _tokenExchangerBuilder = services =>
             {
-                services.AddKeyedScoped<IClientCredentialsTokenExchanger, ClientCredentialsFlowExchangeToken>(serviceProviderName);
+                services.AddKeyedScoped<IClientCredentialsTokenExchanger, ClientCredentialsFlowExchangeToken>(_serviceProviderName);
             };
             return this;
         }

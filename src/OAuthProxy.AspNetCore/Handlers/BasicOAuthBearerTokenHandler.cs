@@ -48,7 +48,7 @@ namespace OAuthProxy.AspNetCore.Handlers
             var tokenBuilder = _authorizationFlowServiceFactory.GetAccessTokenBuilder(serviceName);
             
             var token = await tokenBuilder.BuildAccessTokenAsync(request, userId, serviceName);
-            if(string.IsNullOrEmpty(token.AccessToken))
+            if (string.IsNullOrEmpty(token.AccessToken))
             {
                 var statusCode = token.StatusCode != System.Net.HttpStatusCode.OK ? 
                     token.StatusCode : System.Net.HttpStatusCode.Unauthorized;
