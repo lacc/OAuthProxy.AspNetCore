@@ -54,7 +54,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 throw new InvalidOperationException("Failed to exchange client credentials for access token.");
             }
 
-            TimeSpan tomenExpiration = tokenResponse.ExpiresIn > 0 ? 
+            TimeSpan tokenExpiration = tokenResponse.ExpiresIn > 0 ? 
                 TimeSpan.FromSeconds(tokenResponse.ExpiresIn) : 
                 config.TokenExpirationInDays.HasValue ? 
                     TimeSpan.FromDays(config.TokenExpirationInDays.Value) :
@@ -65,7 +65,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 AccessToken = tokenResponse.AccessToken,
                 ExpiresAt = tokenResponse.ExpiresIn > 0 ? 
                     DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn) :
-                    DateTime.UtcNow.Add(tomenExpiration)
+                    DateTime.UtcNow.Add(tokenExpiration)
             };
         }
     }

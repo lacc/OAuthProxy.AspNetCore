@@ -47,12 +47,12 @@ namespace OAuthProxy.AspNetCore.Tests
             }
             else
             {
-                var mockedExcchanger = new Mock<IClientCredentialsTokenExchanger>();
-                mockedExcchanger
+                var mockedExchanger = new Mock<IClientCredentialsTokenExchanger>();
+                mockedExchanger
                     .Setup(x => x.ExchangeTokenAsync(It.IsAny<ThirdPartyServiceConfig>()))
                     .ThrowsAsync(new Exception("Exchange failed"));
 
-                services.AddKeyedScoped(serviceProviderName, (sp, o) => mockedExcchanger.Object);
+                services.AddKeyedScoped(serviceProviderName, (sp, o) => mockedExchanger.Object);
             }
                 
             services.AddLogging();
