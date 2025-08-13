@@ -15,7 +15,7 @@ namespace OAuthProxy.AspNetCore.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
 
             modelBuilder.Entity("OAuthProxy.AspNetCore.Data.ThirdPartyTokenEntity", b =>
                 {
@@ -54,7 +54,7 @@ namespace OAuthProxy.AspNetCore.Migrations
                     b.HasIndex("UserId", "ThirdPartyServiceProvider")
                         .IsUnique();
 
-                    b.ToTable("OAuthTokens");
+                    b.ToTable("OAuthTokens", (string)null);
                 });
 #pragma warning restore 612, 618
         }

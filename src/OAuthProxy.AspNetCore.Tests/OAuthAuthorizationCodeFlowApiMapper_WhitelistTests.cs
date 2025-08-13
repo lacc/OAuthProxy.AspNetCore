@@ -32,7 +32,13 @@ namespace OAuthProxy.AspNetCore.Tests
             // Use reflection to call the private static method
             var method = typeof(OAuthAuthorizationCodeFlowApiMapper)
                 .GetMethod("IsUrlWhitelisted", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            return (bool)method.Invoke(null, new object[] { whitelist, redirectUrl });
+            var res = method?.Invoke(null, [whitelist, redirectUrl]);
+            if (res is bool result)
+            {
+                return result;
+            }
+
+            return false;
         }
     }
 }

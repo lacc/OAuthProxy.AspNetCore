@@ -16,7 +16,7 @@
 - **Server-Side Secrets:** Keeps OAuth client secrets safe on the server, away from client applications.
 - **Demo & Tests Included:** Comes with a demo project and comprehensive unit tests.
 
-> **Note:** Currently supports only the **Authorization Code flow**. Future flows may be added.
+> **Note:** Supports the **Authorization Code flow** and the **Client Credentials flow**. Future flows may be added.
 
 ---
 
@@ -45,6 +45,8 @@
 - **Minimal Boilerplate:** Add new OAuth providers with ease.
 - **Demo Project:** Includes a working ASP.NET Core app with OpenAPI support.
 - **Comprehensive Tests:** Ensures reliability with unit tests.
+- **Authorization Code Flow:** Supports user authentication with third-party services.
+- **Client Credentials Flow:** Supports machine-to-machine authentication for backend services.
 
 ---
 
@@ -116,6 +118,47 @@ Follow these steps to set up and run the demo project:
   - The library is provider-agnostic. You must include the appropriate EF Core provider package (e.g., Microsoft.EntityFrameworkCore.Sqlite, Microsoft.EntityFrameworkCore.SqlServer) in your project based on your database choice.
 ---
 
+## Client Credentials Flow
+
+The **Client Credentials flow** is supported for machine-to-machine scenarios where no user interaction is required. This is ideal for backend services or daemons that need to authenticate directly with third-party APIs.
+The expiration of the Access Token is 1 year if not specified otherwise by the provider. Once the token expores there is no automated token refresh happening.
+
+### How to Configure
+
+1. **Update `appsettings.json`**  
+   Add your service configuration under `ThirdPartyServices`:
+   ```json
+   {
+     "ThirdPartyServices": { 
+        "ServiceC": { 
+          "ClientId": "your-client-id", 
+          "ClientSecret": "your-client-secret", 
+          "TokenEndpoint": "https://provider.com/oauth/token", 
+          "ApiBaseUrl": "https://api.provider.com", 
+          "Scopes": "read write",
+          "TokenExpirationInDays":  30  //Only if provider doesn't specify expiration. Default is 360
+        } 
+   }
+   ```
+2. **Register the Client in `Program.cs`**          
+   Use `.WithClientCredentialsFlow()` when adding the service client:
+   ```csharp
+   builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => proxyBuilder 
+      .AddOAuthServiceClient<ThirdPartyClientC_ClientCredentials>("ServiceC", clientBuilder => clientBuilder
+         .WithClientCredentialsFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceC")) ) ); 
+   ```
+3. **Inject and Use the Client**  
+   Example client class:
+   
+### Notes
+
+- The client credentials flow does not require user interaction or redirection.
+- Tokens are securely stored and managed by the library.
+- You can customize the token exchanger by using `.ConfigureTokenExchanger<T>()` on the client builder.
+- There is no token renewal process in this flow; tokens are valid until they expire or are revoked by the provider.
+- Token expiration is defined by the provider or can be configured in the `appsettings.json` file under the `TokenExpirationInDays` property. 
+  If not specified, the default is 360 days.
+
 ## Configuration
 
 ### 1. Get OAuth Credentials
@@ -123,7 +166,7 @@ Follow these steps to set up and run the demo project:
 - Set the callback URL to `/api/proxy/{Name}/callback` (e.g., `/api/proxy/ServiceA/callback`).
 
 ### 2. Update `appsettings.json`
-See the example in [Quick Start](#quick-start).
+See the example in [Quick Start](#quick-start) and [Client Credentials Flow](#client-credentials-flow).
 
 ### 3. Add to Your Project
 In `Program.cs`, configure OAuthProxy:
@@ -155,6 +198,9 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
     })
   .AddOAuthServiceClient<GitHubClient>("ServiceA", clientBuilder => clientBuilder
     .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
+  .AddOAuthServiceClient<GitHubClient>("ServiceC", clientBuilder => clientBuilder
+    .WithClientCredentialsFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceC")))
+
 );
 ```
 

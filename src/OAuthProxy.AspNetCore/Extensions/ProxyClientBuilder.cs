@@ -4,6 +4,7 @@ using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Handlers;
 using OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow;
+using OAuthProxy.AspNetCore.Services.ClientCredentialsFlow;
 
 namespace OAuthProxy.AspNetCore.Extensions
 {
@@ -51,6 +52,11 @@ namespace OAuthProxy.AspNetCore.Extensions
 
         public ProxyClientBuilder<TClient> WithAuthorizationCodeFlow(IConfigurationSection? configurationSection = null, Action<AuthorizationCodeFlowServiceBuilder>? authorizationFlowBuilder = null)
         {
+            if (_builderOption.AuthorizationFlowBuilder != null)
+            {
+                throw new InvalidOperationException("AuthorizationFlowBuilder is already set. Cannot set AuthorizationCodeFlow.");
+            }
+
             if (configurationSection != null)
             {
                 WithAuthorizationConfig(configurationSection);
@@ -58,6 +64,25 @@ namespace OAuthProxy.AspNetCore.Extensions
 
             var flowBuilder = new AuthorizationCodeFlowServiceBuilder(_builderOption.ServiceProviderName, _services);
             authorizationFlowBuilder?.Invoke(flowBuilder);
+            _builderOption.AuthorizationFlowBuilder = flowBuilder;
+
+            return this;
+        }
+
+        public ProxyClientBuilder<TClient> WithClientCredentialsFlow(IConfigurationSection? configurationSection = null, Action<ClientCredentialsFlowServiceBuilder>? flowBuilderAction = null)
+        {
+            if (_builderOption.AuthorizationFlowBuilder != null)
+            {
+                throw new InvalidOperationException("AuthorizationFlowBuilder is already set. Cannot set ClientCredentialsFlow.");
+            }
+
+            if (configurationSection != null)
+            {
+                WithAuthorizationConfig(configurationSection);
+            }
+
+            var flowBuilder = new ClientCredentialsFlowServiceBuilder(_builderOption.ServiceProviderName, _services);
+            flowBuilderAction?.Invoke(flowBuilder);
             _builderOption.AuthorizationFlowBuilder = flowBuilder;
 
             return this;
