@@ -42,7 +42,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError("OAuth token exchange failed. Status Code: {StatusCode}, Response: {Response}", response.StatusCode, errorContent);
-                throw new InvalidOperationException($"OAuth token exchange failed with status code {response.StatusCode}: {errorContent}");
+                throw new InvalidOperationException($"OAuth token exchange failed with status code {response.StatusCode}. See logs for details.");
             }
 
             var json = await response.Content.ReadAsStringAsync();
