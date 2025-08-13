@@ -5,6 +5,6 @@ namespace OAuthProxy.AspNetCore.Abstractions
 {
     public interface IClientCredentialsTokenExchanger
     {
-        Task<TokenExchangeResponse> ExchangeTokenAsync(ThirdPartyServiceConfig config, string clientId, string clientSecret, string scope);
+        Task<TokenExchangeResponse> ExchangeTokenAsync(ThirdPartyServiceConfig config);
     }
 }

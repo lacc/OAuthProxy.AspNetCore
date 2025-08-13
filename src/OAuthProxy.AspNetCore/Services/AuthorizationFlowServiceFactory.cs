@@ -33,5 +33,11 @@ namespace OAuthProxy.AspNetCore.Services
             var res = _serviceProvider.GetKeyedService<IOAuthAuthorizationRefreshTokenExchanger>(serviceName);
             return res ?? throw new InvalidOperationException($"No authorization refresh token exchanger registered for service '{serviceName}'.");
         }
+
+        public IAccessTokenBuilder GetAccessTokenBuilder(string serviceName)
+        {
+            var res = _serviceProvider.GetKeyedService<IAccessTokenBuilder>(serviceName);
+            return res ?? throw new InvalidOperationException($"No access token builder registered for service '{serviceName}'.");
+        }
     }
 }

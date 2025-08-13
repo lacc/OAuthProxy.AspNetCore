@@ -1,21 +1,24 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Routing.Template;
+using Microsoft.Extensions.Logging;
 using OAuthProxy.AspNetCore.Abstractions;
+using OAuthProxy.AspNetCore.Services;
 using System.Net.Http.Headers;
 
 namespace OAuthProxy.AspNetCore.Handlers
 {
     internal class BasicOAuthBearerTokenHandler: DelegatingHandler
     {
-        private readonly ITokenStorageService _tokenService;
         private readonly IUserIdProvider _userIdProvider;
         private readonly IProxyRequestContext _proxyRequestContext;
+        private readonly AuthorizationFlowServiceFactory _authorizationFlowServiceFactory;
         private readonly ILogger<BasicOAuthBearerTokenHandler> _logger;
 
-        public BasicOAuthBearerTokenHandler(ITokenStorageService tokenService, IUserIdProvider userIdProvider, IProxyRequestContext proxyRequestContext, ILogger<BasicOAuthBearerTokenHandler> logger)
+        public BasicOAuthBearerTokenHandler(IUserIdProvider userIdProvider, 
+            IProxyRequestContext proxyRequestContext, AuthorizationFlowServiceFactory authorizationFlowServiceFactory, ILogger<BasicOAuthBearerTokenHandler> logger)
         {
-            _tokenService = tokenService;
             _userIdProvider = userIdProvider;
             _proxyRequestContext = proxyRequestContext;
+            _authorizationFlowServiceFactory = authorizationFlowServiceFactory;
             _logger = logger;
         }
 
@@ -43,56 +46,35 @@ namespace OAuthProxy.AspNetCore.Handlers
                 };
             }
 
-            var token = await _tokenService.GetTokenAsync(userId, serviceName);
-            if (string.IsNullOrEmpty(token?.AccessToken))
+            var tokenBuilder = _authorizationFlowServiceFactory.GetAccessTokenBuilder(serviceName);
+            if(tokenBuilder == null)
             {
-                _logger.LogWarning("Access token is not available for user {UserId} and service {ServiceName}.", userId, serviceName);
-                return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)
+                _logger.LogWarning("No access token builder found for service {ServiceName}.", serviceName);
+                return new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
                 {
-                    Content = new StringContent("Access token is not available.")
+                    Content = new StringContent("No access token builder found for the specified service.")
                 };
             }
 
-            if (token.IsExpired)
+            var token = await tokenBuilder.BuildAccessTokenAsync(request, userId, serviceName);
+            if(string.IsNullOrEmpty(token.AccessToken))
             {
-                if (string.IsNullOrEmpty(token.RefreshToken))
-                {
-                    _logger.LogWarning("Access token is expired and no refresh token is available for user {UserId} and service {ServiceName}.", userId, serviceName);
-                    return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)
-                    {
-                        Content = new StringContent("Access token is expired and no refresh token is available.")
-                    };
-                }
+                var statusCode = token.StatusCode != System.Net.HttpStatusCode.OK ? 
+                    token.StatusCode : System.Net.HttpStatusCode.Unauthorized;
+                var content = string.IsNullOrEmpty(token.ErrorMessage) ? 
+                    "Access token is not available." : token.ErrorMessage;
+                
+                _logger.LogWarning("Failed to retrieve access token for user {UserId} and service {ServiceName}: {ErrorMessage}",
+                    userId, serviceName, content);
 
-                // If the token is expired but a refresh token is available, we can attempt to refresh it
-                try
+                return new HttpResponseMessage(statusCode)
                 {
-                    var refreshedToken = await _tokenService.RefreshTokenAsync(userId, serviceName, token.RefreshToken);
-                    if (string.IsNullOrEmpty(refreshedToken?.AccessToken))
-                    {
-                        _logger.LogWarning("Failed to refresh access token for user {UserId} and service {ServiceName}.", userId, serviceName);
-                        return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)
-                        {
-                            Content = new StringContent("Failed to refresh access token.")
-                        };
-                    }
-                     
-                    _logger.LogInformation("Access token refreshed successfully for user {UserId} and service {ServiceName}.", userId, serviceName);
-                    token = refreshedToken;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error refreshing access token for user {UserId} and service {ServiceName}.", userId, serviceName);
-                    return new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
-                    {
-                        Content = new StringContent("An internal server error occurred while refreshing the access token.")
-                    };
-                }
-
+                    Content = new StringContent(content)
+                };
             }
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
-            
+
             return await base.SendAsync(request, cancellationToken);
         }
     }

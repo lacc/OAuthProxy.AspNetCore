@@ -77,7 +77,8 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
             _urlProviderBuilder?.Invoke(_services);
             _tokenExchangerBuilder?.Invoke(_services);
             _refreshTokenExchangerBuilder?.Invoke(_services);
-
+            
+            _services.AddKeyedScoped<IAccessTokenBuilder, AuthorizationCodeFlowAccessTokenBuilder>(ServiceProviderName);
             _services.AddKeyedScoped<IProxyApiMapper, OAuthAuthorizationCodeFlowApiMapper>(ServiceProviderName);
 
         }

@@ -17,16 +17,16 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             _logger = logger;
         }
 
-        public async Task<TokenExchangeResponse> ExchangeTokenAsync(ThirdPartyServiceConfig config, string clientId, string clientSecret, string scope)
+        public async Task<TokenExchangeResponse> ExchangeTokenAsync(ThirdPartyServiceConfig config)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, config.TokenEndpoint)
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     { "grant_type", "client_credentials" },
-                    { "client_id", clientId },
-                    { "client_secret", clientSecret },
-                    { "scope", scope }
+                    { "client_id", config.ClientId },
+                    { "client_secret", config.ClientSecret },
+                    { "scope", config.Scopes }
                 })
             };
 
@@ -44,7 +44,9 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             return new TokenExchangeResponse
             {
                 AccessToken = tokenResponse.AccessToken,
-                ExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn)
+                ExpiresAt = tokenResponse.ExpiresIn > 0 ? 
+                    DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn):
+                    DateTime.MaxValue,
             };
 
 

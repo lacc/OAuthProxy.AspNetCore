@@ -32,10 +32,21 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             return this;
         }
 
+        public ClientCredentialsFlowServiceBuilder ConfigureTokenExchanger<TService>()
+            where TService : class, IClientCredentialsTokenExchanger
+        {
+            _tokenExchangerBuilder = services =>
+            {
+                services.AddKeyedScoped<IClientCredentialsTokenExchanger, TService>(_serviceProviderName);
+            };
+            return this;
+        }
+
         public void Build()
         {
             _tokenExchangerBuilder?.Invoke(_services);
-            _services.AddKeyedScoped<IProxyApiMapper, OAuthClientCredentialsFlowApiMapper>(_serviceProviderName);
+
+            _services.AddKeyedScoped<IAccessTokenBuilder, AuthorizationCodeFlowAccessTokenBuilder>(_serviceProviderName);
         }
     }
 }

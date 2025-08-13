@@ -5,8 +5,7 @@ namespace OAuthProxy.AspNetCore.Data
     public class TokenDbContext(DbContextOptions<TokenDbContext> options) : DbContext(options)
     {
         public DbSet<ThirdPartyTokenEntity> OAuthTokens { get; set; }
-        public DbSet<ClientCredentialsConfigEntity> ClientCredentialsConfigs { get; set; }
-
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

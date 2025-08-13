@@ -60,8 +60,10 @@ namespace OAuthProxy.AspNetCore.Tests
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configDict)
                 .Build();
-            
+            var accessTokenBuilder = new Mock<IAccessTokenBuilder>();
             services.AddScoped<IProxyRequestContext, ProxyRequestContext>();
+            services.AddScoped<IAccessTokenBuilder>(_ => accessTokenBuilder.Object);
+            services.AddScoped<AuthorizationFlowServiceFactory>();
             services.AddScoped<BasicOAuthBearerTokenHandler>();
 
             var expectedAccessToken = "dummy-access-token";
@@ -93,7 +95,7 @@ namespace OAuthProxy.AspNetCore.Tests
 
             // Register ProxyB
             new ProxyClientBuilder<FakeProxyClient>("ProxyB", services, configuration, "ThirdPartyClients")
-                .WithAuthorizationCodeFlow(configuration.GetSection("ThirdPartyClients:ProxyB"))
+                .WithClientCredentialsFlow(configuration.GetSection("ThirdPartyClients:ProxyB"))
                 .AddHttpMessageHandler<ExtraBHeaderHandler>()
                 .AddHttpMessageHandler<CaptureRequestHandler>(sp => captureHandlerB)
                 .Build();

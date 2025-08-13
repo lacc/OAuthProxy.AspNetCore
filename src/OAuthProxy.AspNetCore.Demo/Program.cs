@@ -60,13 +60,11 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
             {
                 builder.ConfigureTokenExchanger<DummyCodeExchanger>();
             });
-    }
-//.AddOAuthServiceClient<ThirdPartyClientA>("Nuk", proxyClientBuilder => proxyClientBuilder
-//    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA"), builder =>
-//    {
-//        builder.ConfigureTokenExchanger<DummyCodeExchanger>();
-//    })
-)
+    })
+    .AddOAuthServiceClient<ThirdPartyClientC_ClientCredentials>("ThirdPartyClientC_ClientCredentials", proxyClientBuilder => 
+        proxyClientBuilder
+            .WithClientCredentialsFlow(builder.Configuration.GetSection("ThirdPartyServices:ThirdPartyClientC_ClientCredentials")))
+
 );
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <Version>2.2.0</Version>
+    <Version>2.3.2</Version>
     <Authors>lacc</Authors>
     <PackageId>OAuthProxy.AspNetCore</PackageId>
     <PackageDescription>OAuthProxy.AspNetCore is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy. It uses Entity Framework Core for token storage and supports any EF Core-compatible database provider.</PackageDescription>
@@ -15,7 +15,14 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/lacc/OAuthProxy.AspNetCore</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Apis\OAuthClientCredentialsFlowApiMapper.cs" />
+    <Compile Remove="Data\ClientCredentialsConfigEntity.cs" />
+    <Compile Remove="Services\ClientCredentialsFlow\ClientCredentialsFlowStorage.cs" />
+  </ItemGroup>
   
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
