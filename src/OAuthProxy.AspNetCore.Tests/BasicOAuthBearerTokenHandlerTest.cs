@@ -17,7 +17,7 @@ namespace OAuthProxy.AspNetCore.Tests
             ITokenStorageService tokenService,
             IUserIdProvider userIdProvider,
             IProxyRequestContext proxyRequestContext,
-            AuthorizationFlowServiceFactory authorizationFlowServiceFactory = null,
+            AuthorizationFlowServiceFactory? authorizationFlowServiceFactory = null,
             HttpResponseMessage? innerResponse = null)
         {
             var innerHandler = new Mock<HttpMessageHandler>();
@@ -37,11 +37,8 @@ namespace OAuthProxy.AspNetCore.Tests
             services.AddScoped<IProxyRequestContext>(_ => proxyRequestContext);
             services.AddScoped<IAccessTokenBuilder>(_ => accessTokenBuilder.Object);
 
-            var _authorizationFlowServiceFactory = authorizationFlowServiceFactory;
-            if (_authorizationFlowServiceFactory == null)
-            {
-                _authorizationFlowServiceFactory = new AuthorizationFlowServiceFactory(services.BuildServiceProvider());
-            }
+            var _authorizationFlowServiceFactory = authorizationFlowServiceFactory ?? 
+                new AuthorizationFlowServiceFactory(services.BuildServiceProvider());
 
             var handler = new BasicOAuthBearerTokenHandler(userIdProvider, proxyRequestContext, _authorizationFlowServiceFactory, logger.Object)
             {

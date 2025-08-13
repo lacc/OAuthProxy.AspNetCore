@@ -10,7 +10,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<ClientCredentialsFlowExchangeToken> _logger;
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         public ClientCredentialsFlowExchangeToken(HttpClient httpClient, ILogger<ClientCredentialsFlowExchangeToken> logger)
         {
             _httpClient = httpClient;
@@ -44,7 +44,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             if (tokenResponse == null)
             {
                 _logger.LogError("Failed to deserialize token response: {Response}", json);
-                throw new InvalidOperationException("Failed to exchange code for access token.");
+                throw new InvalidOperationException("Failed to exchange client credentials for access token.");
             }
 
             return new TokenExchangeResponse
@@ -52,7 +52,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 AccessToken = tokenResponse.AccessToken,
                 ExpiresAt = tokenResponse.ExpiresIn > 0 ? 
                     DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn) :
-                    DateTime.MaxValue,
+                    DateTime.UtcNow.AddYears(1)
             };
         }
     }

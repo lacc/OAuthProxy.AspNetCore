@@ -1,4 +1,5 @@
-﻿namespace OAuthProxy.AspNetCore.Demo.Services
+﻿
+namespace OAuthProxy.AspNetCore.Demo.Services
 {
     public class ThirdPartyClientC_ClientCredentials
     {

@@ -121,6 +121,7 @@ Follow these steps to set up and run the demo project:
 ## Client Credentials Flow
 
 The **Client Credentials flow** is supported for machine-to-machine scenarios where no user interaction is required. This is ideal for backend services or daemons that need to authenticate directly with third-party APIs.
+The expiration of the Access Token is 1 year if not specified otherwise by the provider. Once the token expores there is no automated token refresh happening.
 
 ### How to Configure
 

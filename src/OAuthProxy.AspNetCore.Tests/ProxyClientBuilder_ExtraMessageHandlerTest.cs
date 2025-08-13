@@ -48,7 +48,7 @@ namespace OAuthProxy.AspNetCore.Tests
         {
             // Arrange
             var services = new ServiceCollection();
-            var configDict = new Dictionary<string, string>
+            var configDict = new Dictionary<string, string?>
             {
                 ["ThirdPartyClients:ProxyA:ApiBaseUrl"] = "https://example.com/",
                 ["ThirdPartyClients:ProxyA:ClientId"] = "idA",
