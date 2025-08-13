@@ -14,14 +14,14 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             ConfigureDefaultServices(serviceProviderName);
 
             _serviceProviderName = serviceProviderName;
-            _services = services;   
+            _services = services;
 
         }
 
         private ClientCredentialsFlowServiceBuilder ConfigureDefaultServices(string serviceProviderName)
         {
             if (string.IsNullOrWhiteSpace(serviceProviderName))
-            {   
+            {
                 throw new ArgumentException("Service provider name cannot be null or empty.", nameof(serviceProviderName));
             }
             _tokenExchangerBuilder = services =>

@@ -9,7 +9,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
     internal class ClientCredentialsFlowExchangeToken : IClientCredentialsTokenExchanger
     {
         /// <summary>
-        /// The default token expiration used when the token response does not specify an expiration.
+        /// Fallback token expiration used when the token response does not specify an expiration.
         /// 360 days was chosen to ensure long-lived tokens for services that do not provide expiration information.
         /// Configure through TokenExpirationInDays in client appsettings configuration.
         /// </summary>
