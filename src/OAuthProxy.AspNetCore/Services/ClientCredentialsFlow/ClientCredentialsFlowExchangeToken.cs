@@ -10,7 +10,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<ClientCredentialsFlowExchangeToken> _logger;
-        private JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         public ClientCredentialsFlowExchangeToken(HttpClient httpClient, ILogger<ClientCredentialsFlowExchangeToken> logger)
         {
             _httpClient = httpClient;
@@ -31,7 +31,13 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             };
 
             var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("OAuth token exchange failed. Status Code: {StatusCode}, Response: {Response}", response.StatusCode, errorContent);
+                throw new InvalidOperationException($"OAuth token exchange failed with status code {response.StatusCode}: {errorContent}");
+            }
+
             var json = await response.Content.ReadAsStringAsync();
             var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(json, _jsonOptions);
 

@@ -127,12 +127,23 @@ The **Client Credentials flow** is supported for machine-to-machine scenarios wh
 1. **Update `appsettings.json`**  
    Add your service configuration under `ThirdPartyServices`:
    ```json
-   {"ThirdPartyServices": { "ServiceC": { "ClientId": "your-client-id", "ClientSecret": "your-client-secret", "TokenEndpoint": "https://provider.com/oauth/token", "ApiBaseUrl": "https://api.provider.com", "Scopes": "read write" } }
+   {
+     "ThirdPartyServices": { 
+        "ServiceC": { 
+          "ClientId": "your-client-id", 
+          "ClientSecret": "your-client-secret", 
+          "TokenEndpoint": "https://provider.com/oauth/token", 
+          "ApiBaseUrl": "https://api.provider.com", 
+          "Scopes": "read write" 
+        } 
+   }
    ```
 2. **Register the Client in `Program.cs`**          
    Use `.WithClientCredentialsFlow()` when adding the service client:
    ```csharp
-   builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => proxyBuilder .AddOAuthServiceClient<ThirdPartyClientC_ClientCredentials>("ServiceC", clientBuilder => clientBuilder.WithClientCredentialsFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceC")) ) );
+   builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => proxyBuilder 
+      .AddOAuthServiceClient<ThirdPartyClientC_ClientCredentials>("ServiceC", clientBuilder => clientBuilder
+         .WithClientCredentialsFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceC")) ) ); 
    ```
 3. **Inject and Use the Client**  
    Example client class:

@@ -61,7 +61,7 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
                 builder.ConfigureTokenExchanger<DummyCodeExchanger>();
             });
     })
-    .AddOAuthServiceClient<ThirdPartyClientC_ClientCredentials>("ThirdPartyClientC_ClientCredentials", proxyClientBuilder => 
+    .AddOAuthServiceClient<ThirdPartyClientC_ClientCredentials>("ServiceC", proxyClientBuilder => 
         proxyClientBuilder
             .WithClientCredentialsFlow(builder.Configuration.GetSection("ThirdPartyServices:ThirdPartyClientC_ClientCredentials")))
 
