@@ -12,7 +12,6 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
         {
             _tokenService = tokenService;
             _logger = logger;
-            // Initialization logic can go here if needed
         }
 
         public async Task<AccessTokenBuilderResponse> BuildAccessTokenAsync(HttpRequestMessage request, string userId, string serviceName)

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Routing.Template;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Services;
 using System.Net.Http.Headers;

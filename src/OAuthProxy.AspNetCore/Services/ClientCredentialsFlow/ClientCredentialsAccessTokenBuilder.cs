@@ -2,12 +2,6 @@
 using Microsoft.Extensions.Options;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
-using OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
 {
@@ -91,7 +85,6 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                     };
                 }
             }
-            
         }
     }
 }

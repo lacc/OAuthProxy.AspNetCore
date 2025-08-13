@@ -26,7 +26,7 @@ namespace OAuthProxy.AspNetCore.Services
         public IClientCredentialsTokenExchanger GetClientCredentialsTokenExchanger(string serviceName)
         {
             var res = _serviceProvider.GetKeyedService<IClientCredentialsTokenExchanger>(serviceName);
-            return res ?? throw new InvalidOperationException($"No authorization token exchanger registered for service '{serviceName}'.");
+            return res ?? throw new InvalidOperationException($"No client credentials token exchanger registered for service '{serviceName}'.");
         }
         public IOAuthAuthorizationRefreshTokenExchanger GetAuthorizationRefreshTokenExchanger(string serviceName)
         {

@@ -45,11 +45,9 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             {
                 AccessToken = tokenResponse.AccessToken,
                 ExpiresAt = tokenResponse.ExpiresIn > 0 ? 
-                    DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn):
+                    DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn) :
                     DateTime.MaxValue,
             };
-
-
         }
     }
 }

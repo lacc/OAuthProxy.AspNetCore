@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using OAuthProxy.AspNetCore.Abstractions;
-using OAuthProxy.AspNetCore.Apis;
-using OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow;
 
 namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
 {
@@ -46,7 +44,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
         {
             _tokenExchangerBuilder?.Invoke(_services);
 
-            _services.AddKeyedScoped<IAccessTokenBuilder, AuthorizationCodeFlowAccessTokenBuilder>(_serviceProviderName);
+            _services.AddKeyedScoped<IAccessTokenBuilder, ClientCredentialsAccessTokenBuilder>(_serviceProviderName);
         }
     }
 }

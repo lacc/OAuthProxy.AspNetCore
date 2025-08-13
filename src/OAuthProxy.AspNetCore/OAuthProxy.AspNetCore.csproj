@@ -17,12 +17,6 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Apis\OAuthClientCredentialsFlowApiMapper.cs" />
-    <Compile Remove="Data\ClientCredentialsConfigEntity.cs" />
-    <Compile Remove="Services\ClientCredentialsFlow\ClientCredentialsFlowStorage.cs" />
-  </ItemGroup>
   
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
