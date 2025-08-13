@@ -3,9 +3,10 @@ namespace OAuthProxy.AspNetCore.Demo.Services
 {
     public class ThirdPartyClientC_ClientCredentials
     {
+        public const string ServiceKey = "ServiceC";
         private readonly HttpClient _httpClient;
 
-        public ThirdPartyClientC_ClientCredentials([FromKeyedServices("ServiceC")] HttpClient httpClient)
+        public ThirdPartyClientC_ClientCredentials([FromKeyedServices(ServiceKey)] HttpClient httpClient)
         {
             _httpClient = httpClient;
         }

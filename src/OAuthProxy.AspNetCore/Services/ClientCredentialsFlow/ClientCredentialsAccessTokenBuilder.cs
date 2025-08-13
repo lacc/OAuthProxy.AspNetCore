@@ -25,7 +25,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
         public async Task<AccessTokenBuilderResponse> BuildAccessTokenAsync(HttpRequestMessage request, string userId, string serviceName)
         {
             var token = await _tokenService.GetTokenAsync(userId, serviceName);
-            if (token != null && !string.IsNullOrEmpty(token?.AccessToken))
+            if (!string.IsNullOrEmpty(token?.AccessToken))
             {
                 if (token.IsExpired)
                 {

@@ -8,6 +8,8 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
 {
     internal class ClientCredentialsFlowExchangeToken : IClientCredentialsTokenExchanger
     {
+        private readonly TimeSpan _defaultTokenExpiration = TimeSpan.FromDays(360);
+
         private readonly HttpClient _httpClient;
         private readonly ILogger<ClientCredentialsFlowExchangeToken> _logger;
         private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -52,7 +54,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 AccessToken = tokenResponse.AccessToken,
                 ExpiresAt = tokenResponse.ExpiresIn > 0 ? 
                     DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn) :
-                    DateTime.UtcNow.AddYears(1)
+                    DateTime.UtcNow.Add(_defaultTokenExpiration)
             };
         }
     }

@@ -2,6 +2,7 @@
 {
     public class ThirdPartyClientB
     {
+        public const string ServiceKey = "ServiceB";
         private readonly HttpClient _httpClient;
 
         public ThirdPartyClientB([FromKeyedServices("ServiceB")] HttpClient httpClient)
