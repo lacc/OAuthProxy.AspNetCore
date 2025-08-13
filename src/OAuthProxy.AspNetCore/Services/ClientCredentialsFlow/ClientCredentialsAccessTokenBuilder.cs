@@ -12,6 +12,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
         private readonly IOptionsSnapshot<ThirdPartyProviderConfig> _options;
         private readonly ILogger<ClientCredentialsAccessTokenBuilder> _logger;
 
+        public const string NoRefreshTokenValue = "";
         public ClientCredentialsAccessTokenBuilder(ITokenStorageService tokenService, 
             AuthorizationFlowServiceFactory authorizationFlowServiceFactory, IOptionsSnapshot<ThirdPartyProviderConfig> options, ILogger<ClientCredentialsAccessTokenBuilder> logger)
         {
@@ -53,37 +54,35 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                     StatusCode = System.Net.HttpStatusCode.Unauthorized
                 };
             }
-            else
+
+            try
             {
-                try
+                var providerConfig = _options.Get(serviceName);
+                if (providerConfig?.OAuthConfiguration == null)
                 {
-                    var providerConfig = _options.Get(serviceName);
-                    if (providerConfig?.OAuthConfiguration == null)
-                    {
-                        _logger.LogError("Configuration for service '{ServiceName}' not found.", serviceName);
-                        throw new InvalidOperationException($"Configuration for service '{serviceName}' not found.");
-                    }
-
-                    var response = await clientCredentialsExchanger.ExchangeTokenAsync(providerConfig.OAuthConfiguration);
-                    await _tokenService.SaveTokenAsync(userId, serviceName, response.AccessToken, string.Empty, response.ExpiresAt);
-
-                    return new AccessTokenBuilderResponse
-                    {
-                        AccessToken = response.AccessToken,
-                        StatusCode = string.IsNullOrEmpty(response.AccessToken) ?
-                            System.Net.HttpStatusCode.Unauthorized :
-                            System.Net.HttpStatusCode.OK,
-                    };
+                    _logger.LogError("Configuration for service '{ServiceName}' not found.", serviceName);
+                    throw new InvalidOperationException($"Configuration for service '{serviceName}' not found.");
                 }
-                catch (Exception ex)
+
+                var response = await clientCredentialsExchanger.ExchangeTokenAsync(providerConfig.OAuthConfiguration);
+                await _tokenService.SaveTokenAsync(userId, serviceName, response.AccessToken, NoRefreshTokenValue, response.ExpiresAt);
+
+                return new AccessTokenBuilderResponse
                 {
-                    _logger.LogError(ex, "Error exchanging client credentials for user {UserId} and service {ServiceName}.", userId, serviceName);
-                    return new AccessTokenBuilderResponse
-                    {
-                        ErrorMessage = "Error exchanging client credentials.",
-                        StatusCode = System.Net.HttpStatusCode.InternalServerError
-                    };
-                }
+                    AccessToken = response.AccessToken,
+                    StatusCode = string.IsNullOrEmpty(response.AccessToken) ?
+                        System.Net.HttpStatusCode.Unauthorized :
+                        System.Net.HttpStatusCode.OK,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exchanging client credentials for user {UserId} and service {ServiceName}.", userId, serviceName);
+                return new AccessTokenBuilderResponse
+                {
+                    ErrorMessage = "Error exchanging client credentials.",
+                    StatusCode = System.Net.HttpStatusCode.InternalServerError
+                };
             }
         }
     }

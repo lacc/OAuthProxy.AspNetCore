@@ -10,7 +10,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<ClientCredentialsFlowExchangeToken> _logger;
-
+        private JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         public ClientCredentialsFlowExchangeToken(HttpClient httpClient, ILogger<ClientCredentialsFlowExchangeToken> logger)
         {
             _httpClient = httpClient;
@@ -33,7 +33,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(json);
+            var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(json, _jsonOptions);
 
             if (tokenResponse == null)
             {

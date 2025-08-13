@@ -46,15 +46,7 @@ namespace OAuthProxy.AspNetCore.Handlers
             }
 
             var tokenBuilder = _authorizationFlowServiceFactory.GetAccessTokenBuilder(serviceName);
-            if(tokenBuilder == null)
-            {
-                _logger.LogWarning("No access token builder found for service {ServiceName}.", serviceName);
-                return new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
-                {
-                    Content = new StringContent("No access token builder found for the specified service.")
-                };
-            }
-
+            
             var token = await tokenBuilder.BuildAccessTokenAsync(request, userId, serviceName);
             if(string.IsNullOrEmpty(token.AccessToken))
             {
