@@ -15,7 +15,6 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
 
             _serviceProviderName = serviceProviderName;
             _services = services;
-
         }
 
         private ClientCredentialsFlowServiceBuilder ConfigureDefaultServices(string serviceProviderName)
