@@ -8,7 +8,12 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
 {
     internal class ClientCredentialsFlowExchangeToken : IClientCredentialsTokenExchanger
     {
-        private readonly TimeSpan _defaultTokenExpiration = TimeSpan.FromDays(360);
+        /// <summary>
+        /// The default token expiration used when the token response does not specify an expiration.
+        /// 360 days was chosen to ensure long-lived tokens for services that do not provide expiration information.
+        /// Configure through TokenExpirationInDays in client appsettings configuration.
+        /// </summary>
+        private static readonly TimeSpan _defaultTokenExpiration = TimeSpan.FromDays(360);
 
         private readonly HttpClient _httpClient;
         private readonly ILogger<ClientCredentialsFlowExchangeToken> _logger;
@@ -49,12 +54,18 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 throw new InvalidOperationException("Failed to exchange client credentials for access token.");
             }
 
+            TimeSpan tomenExpiration = tokenResponse.ExpiresIn > 0 ? 
+                TimeSpan.FromSeconds(tokenResponse.ExpiresIn) : 
+                config.TokenExpirationInDays.HasValue ? 
+                    TimeSpan.FromDays(config.TokenExpirationInDays.Value) :
+                    _defaultTokenExpiration;
+
             return new TokenExchangeResponse
             {
                 AccessToken = tokenResponse.AccessToken,
                 ExpiresAt = tokenResponse.ExpiresIn > 0 ? 
                     DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn) :
-                    DateTime.UtcNow.Add(_defaultTokenExpiration)
+                    DateTime.UtcNow.Add(tomenExpiration)
             };
         }
     }
