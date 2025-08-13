@@ -108,7 +108,7 @@ namespace OAuthProxy.AspNetCore.Tests
 
 
         [Fact]
-        public async Task SendAsync_ReturnsUnauthorized_IfTokenMissing()
+        public async Task SendAsync_RequestsTokenFirstTime_IfTokenMissing()
         {
             var tokenService = new Mock<ITokenStorageService>();
             tokenService.Setup(x => x.GetTokenAsync("user1", "serviceA")).ReturnsAsync((UserTokenDTO?)null);
@@ -120,7 +120,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var invoker = CreateInvoker("serviceA", tokenService.Object, userIdProvider.Object, proxyRequestContext.Object);
             var response = await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://test"), CancellationToken.None);
 
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
         [Fact]
