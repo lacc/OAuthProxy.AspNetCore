@@ -9,14 +9,14 @@
         /// <summary>
         /// The client identifier used to authenticate with the third-party service.
         /// </summary>
-        public string ClientId { get; set; } = string.Empty;
+        public string ClientId { get; init; } = string.Empty;
         /// <summary>
         /// The client secret used to authenticate with the third-party service.
         /// </summary>
-        public string ClientSecret { get; set; } = string.Empty;
+        public string ClientSecret { get; init; } = string.Empty;
         /// <summary>
         /// The API key used to access the third-party service.
         /// </summary>
-        public string ApiKey { get; set; } = string.Empty;
+        public string ApiKey { get; init; } = string.Empty;
     }
 }
