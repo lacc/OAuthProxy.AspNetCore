@@ -16,7 +16,7 @@ namespace OAuthProxy.AspNetCore.Services
         {
             if (string.IsNullOrWhiteSpace(thirdPartyProviderName))
             {
-                throw new InvalidOperationException($"Parameter '{nameof(thirdPartyProviderName)}' cannot be null or empty..");
+                throw new InvalidOperationException($"Parameter '{nameof(thirdPartyProviderName)}' cannot be null or empty.");
             }
             var provider = _serviceProvider.GetKeyedService<ISecretProvider>(thirdPartyProviderName);
             if (provider == null)
