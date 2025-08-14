@@ -35,7 +35,7 @@ namespace OAuthProxy.AspNetCore.Tests
 
             var accessTokenBuilder = new Mock<IAccessTokenBuilder>();
             var secretProvider = new Mock<ISecretProvider>();
-            secretProvider.Setup(x => x.GetSecretsAsync(It.IsAny<string>(), It.IsAny<ThirdPartyServiceConfig>()))
+            secretProvider.Setup(x => x.GetSecretsAsync(It.IsAny<ThirdPartyServiceConfig>()))
                 .ReturnsAsync(new ThirdPartySecrets
                 {
                     ClientId = "client-id",
