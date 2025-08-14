@@ -21,7 +21,7 @@ namespace OAuthProxy.AspNetCore.Services
             var provider = _serviceProvider.GetKeyedService<ISecretProvider>(thirdPartyProviderName);
             if (provider == null)
             {
-                throw new InvalidOperationException($"Secrets provider of type {thirdPartyProviderName} could not be resolved.");
+                throw new InvalidOperationException($"Secret provider for service '{thirdPartyProviderName}' could not be resolved.");
             }
             return provider;
         }
