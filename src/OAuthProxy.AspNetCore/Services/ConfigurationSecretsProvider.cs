@@ -6,7 +6,7 @@ namespace OAuthProxy.AspNetCore.Services
 {
     internal class ConfigurationSecretsProvider : ISecretProvider
     {
-        public Task<ThirdPartySecrets> GetSecretsAsync(string key, ThirdPartyServiceConfig config)
+        public Task<ThirdPartySecrets> GetSecretsAsync(ThirdPartyServiceConfig config)
         {
             return Task.FromResult(new ThirdPartySecrets
             {

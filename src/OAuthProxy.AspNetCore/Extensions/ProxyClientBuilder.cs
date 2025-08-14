@@ -173,6 +173,8 @@ namespace OAuthProxy.AspNetCore.Extensions
                                         DefaultHttpClientTimeoutSeconds;
 
                     client.Timeout = TimeSpan.FromSeconds(timeout);
+
+                    //OAuthConfiguration is not null here due to WithAuthorizationConfig above
                     client.BaseAddress = new Uri(_builderOption.OAuthConfiguration!.ApiBaseUrl);
                 })
                 .AddAsKeyed()

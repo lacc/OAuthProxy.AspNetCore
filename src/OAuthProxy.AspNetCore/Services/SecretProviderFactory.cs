@@ -14,7 +14,7 @@ namespace OAuthProxy.AspNetCore.Services
 
         public ISecretProvider CreateSecretProvider(string thirdPartyProviderName)
         {
-            if (string.IsNullOrEmpty(thirdPartyProviderName))
+            if (string.IsNullOrWhiteSpace(thirdPartyProviderName))
             {
                 throw new InvalidOperationException("Third party provider name must be specified.");
             }

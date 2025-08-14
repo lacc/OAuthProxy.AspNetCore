@@ -5,6 +5,6 @@ namespace OAuthProxy.AspNetCore.Abstractions
 {
     public interface ISecretProvider
     {
-        Task<ThirdPartySecrets> GetSecretsAsync(string key, ThirdPartyServiceConfig config);
+        Task<ThirdPartySecrets> GetSecretsAsync(ThirdPartyServiceConfig config);
     }
 }
