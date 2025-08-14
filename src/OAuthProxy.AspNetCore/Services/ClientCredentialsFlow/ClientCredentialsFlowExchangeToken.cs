@@ -17,23 +17,32 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
         private static readonly TimeSpan _defaultTokenExpiration = TimeSpan.FromDays(_defaultTokenExpirationInDays);
 
         private readonly HttpClient _httpClient;
+        private readonly SecretProviderFactory _secretProviderFactory;
+        private readonly IUserIdProvider _userIdProvider;
         private readonly ILogger<ClientCredentialsFlowExchangeToken> _logger;
         private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        public ClientCredentialsFlowExchangeToken(HttpClient httpClient, ILogger<ClientCredentialsFlowExchangeToken> logger)
+        public ClientCredentialsFlowExchangeToken(HttpClient httpClient, SecretProviderFactory secretProviderFactory, IUserIdProvider userIdProvider, ILogger<ClientCredentialsFlowExchangeToken> logger)
         {
             _httpClient = httpClient;
+            _secretProviderFactory = secretProviderFactory;
+            _userIdProvider = userIdProvider;
             _logger = logger;
         }
 
         public async Task<TokenExchangeResponse> ExchangeTokenAsync(ThirdPartyServiceConfig config)
         {
+            var userId = _userIdProvider.GetCurrentUserId();
+            var key = $"{config.Name}:{userId}";
+            var secretProvider = _secretProviderFactory.CreateProvider(config.Name);
+            var secrets = await secretProvider.GetSecretsAsync(key, config);
+
             var request = new HttpRequestMessage(HttpMethod.Post, config.TokenEndpoint)
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     { "grant_type", "client_credentials" },
-                    { "client_id", config.ClientId },
-                    { "client_secret", config.ClientSecret },
+                    { "client_id", secrets.ClientId },
+                    { "client_secret", secrets.ClientSecret },
                     { "scope", config.Scopes }
                 })
             };

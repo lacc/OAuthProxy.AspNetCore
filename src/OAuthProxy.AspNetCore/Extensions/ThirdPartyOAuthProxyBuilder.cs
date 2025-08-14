@@ -111,7 +111,7 @@ namespace OAuthProxy.AspNetCore.Extensions
             _services.AddScoped<IAuthorizationStateService, AuthorizationStateService>();
             _services.AddScoped<BasicOAuthBearerTokenHandler>();
             _services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-            
+            _services.AddScoped<SecretProviderFactory>();
 
             if (BuilderOptions.UserIdProvider == null)
             {
