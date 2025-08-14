@@ -33,7 +33,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
         {
             var userId = _userIdProvider.GetCurrentUserId();
             var key = $"{config.Name}:{userId}";
-            var secretProvider = _secretProviderFactory.CreateProvider(config.Name);
+            var secretProvider = _secretProviderFactory.CreateSecretProvider(config.Name);
             var secrets = await secretProvider.GetSecretsAsync(key, config);
 
             var request = new HttpRequestMessage(HttpMethod.Post, config.TokenEndpoint)

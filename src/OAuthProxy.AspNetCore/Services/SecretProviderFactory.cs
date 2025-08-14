@@ -12,11 +12,11 @@ namespace OAuthProxy.AspNetCore.Services
             _serviceProvider = serviceProvider;
         }
 
-        public ISecretProvider CreateProvider(string thirdPartyProviderName)
+        public ISecretProvider CreateSecretProvider(string thirdPartyProviderName)
         {
             if (string.IsNullOrEmpty(thirdPartyProviderName))
             {
-                throw new InvalidOperationException("Secrets provider type must be specified in the configuration.");
+                throw new InvalidOperationException("Third party provider name must be specified.");
             }
             var provider = _serviceProvider.GetKeyedService<ISecretProvider>(thirdPartyProviderName);
             if (provider == null)

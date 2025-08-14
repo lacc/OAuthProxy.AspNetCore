@@ -134,7 +134,7 @@ namespace OAuthProxy.AspNetCore.Extensions
                 options.AllowHttpRedirects = AllowHttpRedirects;
             });
 
-            if(_secretProviderBuilder == null)
+            if (_secretProviderBuilder == null)
             {
                 WithSecretProvider<ConfigurationSecretsProvider>();
             }
