@@ -17,23 +17,28 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
         private static readonly TimeSpan _defaultTokenExpiration = TimeSpan.FromDays(_defaultTokenExpirationInDays);
 
         private readonly HttpClient _httpClient;
+        private readonly SecretProviderFactory _secretProviderFactory;
         private readonly ILogger<ClientCredentialsFlowExchangeToken> _logger;
         private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        public ClientCredentialsFlowExchangeToken(HttpClient httpClient, ILogger<ClientCredentialsFlowExchangeToken> logger)
+        public ClientCredentialsFlowExchangeToken(HttpClient httpClient, SecretProviderFactory secretProviderFactory, ILogger<ClientCredentialsFlowExchangeToken> logger)
         {
             _httpClient = httpClient;
+            _secretProviderFactory = secretProviderFactory;
             _logger = logger;
         }
 
         public async Task<TokenExchangeResponse> ExchangeTokenAsync(ThirdPartyServiceConfig config)
         {
+            var secretProvider = _secretProviderFactory.CreateSecretProvider(config.Name);
+            var secrets = await secretProvider.GetSecretsAsync(config);
+
             var request = new HttpRequestMessage(HttpMethod.Post, config.TokenEndpoint)
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     { "grant_type", "client_credentials" },
-                    { "client_id", config.ClientId },
-                    { "client_secret", config.ClientSecret },
+                    { "client_id", secrets.ClientId },
+                    { "client_secret", secrets.ClientSecret },
                     { "scope", config.Scopes }
                 })
             };

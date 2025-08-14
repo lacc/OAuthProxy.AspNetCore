@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Handlers;
+using OAuthProxy.AspNetCore.Services;
 using OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow;
 using OAuthProxy.AspNetCore.Services.ClientCredentialsFlow;
 
@@ -18,6 +19,8 @@ namespace OAuthProxy.AspNetCore.Extensions
         private readonly IConfiguration _configuration;
         private readonly string _configPrefix;
         private readonly Dictionary<Type, Func<IServiceProvider, DelegatingHandler>?> _messageHandlerFactories = [];
+
+        private Action<IServiceCollection>? _secretProviderBuilder;
 
         public string ServiceProviderName { get; }
         public bool AllowHttpRedirects { get; set; } = false;
@@ -44,8 +47,10 @@ namespace OAuthProxy.AspNetCore.Extensions
 
         public ProxyClientBuilder<TClient> WithAuthorizationConfig(IConfigurationSection configurationSection)
         {
-            _builderOption.OAuthConfiguration = new ThirdPartyServiceConfig();
-            configurationSection.Bind(_builderOption.OAuthConfiguration);
+            var oauthConfig = configurationSection.Get<ThirdPartyServiceConfig>();
+
+            _builderOption.OAuthConfiguration = oauthConfig ??
+                throw new InvalidOperationException($"Authorization Configuration not found.");
 
             return this;
         }
@@ -99,16 +104,21 @@ namespace OAuthProxy.AspNetCore.Extensions
             return this;
         }
 
+        public ProxyClientBuilder<TClient> WithSecretProvider<TSecretProvider>()
+            where TSecretProvider : class, ISecretProvider
+        {
+            _secretProviderBuilder = (services) =>
+            {
+                services.AddKeyedScoped<ISecretProvider, TSecretProvider>(_builderOption.ServiceProviderName);
+            };
+
+            return this;
+        }
         public void Build()
         {
             if (_builderOption.OAuthConfiguration == null)
             {
-                _builderOption.OAuthConfiguration = new ThirdPartyServiceConfig();
-
-                var oauthConfig = _configuration.GetSection(DefaultConfigKey).Get<ThirdPartyServiceConfig>();
-
-                _builderOption.OAuthConfiguration = oauthConfig ??
-                    throw new InvalidOperationException($"Default Configuration for '{DefaultConfigKey}' not found.");
+                WithAuthorizationConfig(_configuration.GetSection(DefaultConfigKey));
             }
 
             if (_builderOption.AuthorizationFlowBuilder == null)
@@ -123,6 +133,12 @@ namespace OAuthProxy.AspNetCore.Extensions
                 options.OAuthConfiguration = _builderOption.OAuthConfiguration;
                 options.AllowHttpRedirects = AllowHttpRedirects;
             });
+
+            if (_secretProviderBuilder == null)
+            {
+                WithSecretProvider<ConfigurationSecretsProvider>();
+            }
+            _secretProviderBuilder?.Invoke(_services);
 
             _services.AddScoped<TClient>();
 
@@ -142,7 +158,7 @@ namespace OAuthProxy.AspNetCore.Extensions
                             var handlerFactory = handlerFactoryConfig.Value(sp);
                             if (handlerFactory is null)
                             {
-                                throw new InvalidOperationException($"The handler factory for type {handlerObjectType.Name} returned null. " +
+                                throw new InvalidOperationException($"The handler factory for handler type {handlerObjectType.Name} returned null. " +
                                                                     "Ensure the factory function returns a valid handler instance.");
                             }
                             return handlerFactory;
@@ -157,7 +173,9 @@ namespace OAuthProxy.AspNetCore.Extensions
                                         DefaultHttpClientTimeoutSeconds;
 
                     client.Timeout = TimeSpan.FromSeconds(timeout);
-                    client.BaseAddress = new Uri(_builderOption.OAuthConfiguration.ApiBaseUrl);
+
+                    //OAuthConfiguration is not null here due to WithAuthorizationConfig above
+                    client.BaseAddress = new Uri(_builderOption.OAuthConfiguration!.ApiBaseUrl);
                 })
                 .AddAsKeyed()
                 .AddHttpMessageHandler((sp) =>

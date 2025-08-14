@@ -34,13 +34,22 @@ namespace OAuthProxy.AspNetCore.Tests
             var logger = new Mock<ILogger<BasicOAuthBearerTokenHandler>>();
 
             var accessTokenBuilder = new Mock<IAccessTokenBuilder>();
-
+            var secretProvider = new Mock<ISecretProvider>();
+            secretProvider.Setup(x => x.GetSecretsAsync(It.IsAny<ThirdPartyServiceConfig>()))
+                .ReturnsAsync(new ThirdPartySecrets
+                {
+                    ClientId = "client-id",
+                    ClientSecret = "client-secret"
+                });
             IServiceCollection services = new ServiceCollection();
             services.AddScoped<ITokenStorageService>(_ => tokenService);
             services.AddScoped<IUserIdProvider>(_ => userIdProvider);
             services.AddKeyedScoped<IProxyRequestContext>(serviceProviderName, (sp, o) => proxyRequestContext);
             services.AddScoped<IAccessTokenBuilder>(_ => accessTokenBuilder.Object);
             services.AddKeyedScoped<IAccessTokenBuilder, ClientCredentialsAccessTokenBuilder>(serviceProviderName);
+            services.AddScoped<SecretProviderFactory>();
+            services.AddKeyedScoped<ISecretProvider>(serviceProviderName, (sp, o) => secretProvider.Object);
+
             if (!flowThrowsError)
             {
                 services.AddKeyedScoped<IClientCredentialsTokenExchanger, ClientCredentialsFlowExchangeToken>(serviceProviderName);
@@ -82,6 +91,7 @@ namespace OAuthProxy.AspNetCore.Tests
                 options.ServiceProviderName = serviceProviderName;
                 options.OAuthConfiguration = new ThirdPartyServiceConfig()
                 {
+                    Name = serviceProviderName,
                     ApiBaseUrl = "https://api.example.com",
                     ClientId = "client-id",
                     ClientSecret = "client-secret",
