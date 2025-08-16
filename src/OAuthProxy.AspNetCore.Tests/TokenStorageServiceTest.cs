@@ -93,7 +93,7 @@ namespace OAuthProxy.AspNetCore.Tests
             await service.SaveTokenAsync(userId, serviceName, accessToken, refreshToken, expiry);
             Assert.NotNull(await db.OAuthTokens.FirstOrDefaultAsync(t => t.UserId == userId && t.ThirdPartyServiceProvider == serviceName));
 
-            await service.DeleteTokenAsync(userId, serviceName);
+            await service.InvalidateTokenAsync(userId, serviceName);
             Assert.Null(await db.OAuthTokens.FirstOrDefaultAsync(t => t.UserId == userId && t.ThirdPartyServiceProvider == serviceName));
         }
 

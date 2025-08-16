@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using OAuthProxy.AspNetCore.Abstractions;
-using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Data;
 using OAuthProxy.AspNetCore.Models;
 
 namespace OAuthProxy.AspNetCore.Services
 {
-    public class TokenStorageService : ITokenStorageService
+    public class TokenStorageService : ITokenStorageService, ITokenInvalidator
     {
         private readonly TokenDbContext _dbContext;
         private readonly IRefreshTokenService _refreshTokenService;
@@ -54,7 +52,7 @@ namespace OAuthProxy.AspNetCore.Services
             };
         }
 
-        public async Task DeleteTokenAsync(string userId, string serviceName)
+        public async Task InvalidateTokenAsync(string userId, string serviceName)
         {
             var token = await _dbContext.OAuthTokens
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.ThirdPartyServiceProvider == serviceName);
