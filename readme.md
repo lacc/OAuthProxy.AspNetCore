@@ -16,7 +16,7 @@
 - **Server-Side Secrets:** Keeps OAuth client secrets safe on the server, away from client applications.
 - **Demo & Tests Included:** Comes with a demo project and comprehensive unit tests.
 
-> **Note:** Supports the **Authorization Code flow** and the **Client Credentials flow**. Future flows may be added.
+> **Note:** Supports the **Authorization Code flow**, the **Client Credentials flow** and extendable with Custom Flows. Future flows may be added.
 
 ---
 
@@ -246,32 +246,33 @@ app.UseAuthentication();
 
 ---
 
-## Extending the Library
+## Configuring and Extending the Library
 
 - **New Provider:** Add with `.AddOAuthServiceClient<TClient>("Name", ...)`.
 - **Custom Identity:** Use `.WithUserIdProvider<T>()`.
 - **Custom Tokens:** Implement `IOAuthAuthorizationTokenExchanger`.
 - **HTTP Client Message Handler:** Use `AddHttpMessageHandler` to customize HTTP requests.
+- **Custom Flow:** Implement your own flow by using `WithCustomFlow`.
 
-## Configure the Library
-- Storage options
-  ```csharp
-    proxyBuilder
-      .WithTokenStorageOptions(options => 
-      {
-        options.AutoMigration = true;
-        options.DatabaseOptions = dbOptions => dbOptions.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection"));
-      })
-  ```
-    - Auto migration on startup: `options.AutoMigration` (default false)
-    - EF database configuration: `options.DatabaseOptions`
-      You must also add the EF Core provider package for your chosen database. For example:
-      - SQLite: `dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 9.0.8`
-      - SQL Server: `dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 9.0.8`
-      - PostgreSQL: `dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 9.0.8`
+### Storage options
+```csharp
+proxyBuilder
+    .WithTokenStorageOptions(options => 
+    {
+    options.AutoMigration = true;
+    options.DatabaseOptions = dbOptions => dbOptions.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection"));
+    })
+```
+ 
+- Auto migration on startup: `options.AutoMigration` (default false)
+- EF database configuration: `options.DatabaseOptions`
+  You must also add the EF Core provider package for your chosen database. For example:
+  - SQLite: `dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 9.0.8`
+  - SQL Server: `dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 9.0.8`
+  - PostgreSQL: `dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 9.0.8`
 
 
-- Configure dotnet [Data Protection](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/introduction)
+### Configure dotnet [Data Protection](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/introduction)
   ```csharp
   proxyBuilder.ConfigureDataProtector(builder =>
   {
@@ -282,46 +283,46 @@ app.UseAuthentication();
           .SetDefaultKeyLifetime(TimeSpan.FromDays(60));
   })
   ```
-- Custom User ID Provider
+### Custom User ID Provider
   ```csharp
   proxyBuilder.WithUserIdProvider<CustomUserIdProvider>()
   ```
   > **Note:** The default user id provider uses claims to determine the user id (`sub` or `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier`)
 
-- Configure API Mapper
-  ```csharp
-  proxyBuilder.ConfigureApiMapper(config =>
-  {
-      config.ProxyUrlPrefix = "/api/oauth";
-      config.AuthorizeRedirectUrlParameterName = "redirect_uri";
-      config.WhitelistedRedirectUrls =
-      [
-          "https://localhost:5001/",
-          "https://localhost:5001/someRedirectPage"
-      ];
-      config.MapGenericApi = false;
-  });
-  ```
-  - `ProxyUrlPrefix`: Base path for proxy endpoints (default is `/api/proxy`)
-  - `AuthorizeRedirectUrlParameterName`: Query parameter for redirect URL after authorization (default is `local_redirect_uri`)
-  - `WhitelistedRedirectUrls`: List of allowed redirect URLs after the authorization flow to prevent open redirects
-  - `MapGenericApi`: If true, maps all endpoints under `/api/proxy/{Name}/*` to the third-party service. This is useful for quick testing but not recommended for production due to security risks.
+### Configure API Mapper
+```csharp
+proxyBuilder.ConfigureApiMapper(config =>
+{
+    config.ProxyUrlPrefix = "/api/oauth";
+    config.AuthorizeRedirectUrlParameterName = "redirect_uri";
+    config.WhitelistedRedirectUrls =
+    [
+        "https://localhost:5001/",
+        "https://localhost:5001/someRedirectPage"
+    ];
+    config.MapGenericApi = false;
+});
+```
+- `ProxyUrlPrefix`: Base path for proxy endpoints (default is `/api/proxy`)
+- `AuthorizeRedirectUrlParameterName`: Query parameter for redirect URL after authorization (default is `local_redirect_uri`)
+- `WhitelistedRedirectUrls`: List of allowed redirect URLs after the authorization flow to prevent open redirects
+- `MapGenericApi`: If true, maps all endpoints under `/api/proxy/{Name}/*` to the third-party service. This is useful for quick testing but not recommended for production due to security risks.
 
 
-- Configure 3rd party service
-  ```csharp
-    proxyBuilder.AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
-      .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
+### Configure 3rd party service
+```csharp
+proxyBuilder.AddOAuthServiceClient<ThirdPartyClientA>("ServiceA", proxyClientBuilder => proxyClientBuilder
+    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceA")))
     
-    proxyBuilder.AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => proxyClientBuilder
-      .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
-      {
-          builder.ConfigureTokenExchanger<DummyCodeExchanger>();
-      }))
-  ```
-  - Optionally use `ConfigureTokenExchanger` to replace the default token exchanger service
+proxyBuilder.AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => proxyClientBuilder
+    .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"), builder =>
+    {
+        builder.ConfigureTokenExchanger<DummyCodeExchanger>();
+    }))
+```
+- Optionally use `ConfigureTokenExchanger` to replace the default token exchanger service
 
-- Extend with custom HTTP Client Message Handler
+### Extend with custom HTTP Client Message Handler
   - Create a new class for the message handler:
  
     ```csharp
@@ -345,6 +346,79 @@ app.UseAuthentication();
       proxyClientBuilder
             .AddHttpMessageHandler<DummyHttpMessageHandler>()
             .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"));
+    ```
+### Extend with custom Secret Provider  
+Helps when secrets are not stored in `appsettings.json` or user secrets, but retrieved from a secure vault or other sources.  
+
+- Create a new class implementing `ISecretProvider`
+  ```csharp
+  internal class UserApiKeySecretProvider : ISecretProvider
+  {
+      private readonly IImaginaryUserStorageService _storageService;
+
+      public UserApiKeySecretProvider(IImaginaryUserStorageService storageService)
+      {
+          _storageService = storageService;
+      }
+
+      public async Task<ThirdPartySecrets> GetSecretsAsync(ThirdPartyServiceConfig config)
+      {
+          var secret = await _storageService.GetSecretsAsync(config.Name);
+
+          return new ThirdPartySecrets
+          {
+              ClientId = config.ClientId,
+              ClientSecret = config.ClientSecret,
+              ApiKey = secret.ApiKey
+          };
+      }
+  }
+  ```
+- Register the secret provider in the proxy client builder:
+  
+    ```csharp
+    proxyClientBuilder
+        .WithSecretProvider<UserApiKeySecretProvider>()
+    ```
+
+### Extend with Custom Flow
+  - Create a custom IAccessTokenBuilder to control the flow of the authorization process:
+  
+    ```csharp
+    public class SimpleApiKeyAccessTokenBuilder : IAccessTokenBuilder
+    {
+        private readonly IConfiguration _configuration;
+        public SimpleApiKeyAccessTokenBuilder(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+ 
+        public async Task<AccessTokenBuilderResponse> BuildAccessTokenAsync(HttpRequestMessage request, string userId, string serviceName)
+        {
+            var apiKey = _configuration["ThirdPartyServices:ServiceA:ApiKey"];
+            return Task.FromResult(new AccessTokenBuilderResponse
+            {
+                AccessToken = apiKey,
+                StatusCode = System.Net.HttpStatusCode.OK,
+                ErrorMessage = string.Empty
+            });
+        }
+    }
+    ```
+  
+  - Configure the new builder `WithCustomAuthorizationFlow`:
+  
+    ```csharp
+    proxyClientBuilder
+        .WithCustomAuthorizationFlow(configurationSection, builder =>
+        {
+            builder.ConfigureAccessTokenBuilder<SimpleApiKeyAccessTokenBuilder>();
+            builder.ConfigureCustomServices(services =>
+            {
+                // Register any additional services needed for the custom flow
+                services.AddSingleton<CustomService>();
+            });
+        });
     ```
 
 ## Example: Custom Endpoint with Minimal APIs
