@@ -48,8 +48,6 @@ namespace OAuthProxy.AspNetCore.Services.CustomFlow
 
         public void Build()
         {
-            ValidateServiceProviderName();
-
             if (_accessTokenBuilder == null)
             {
                 throw new InvalidOperationException("Access token builder is not configured. Please configure it before building.");
