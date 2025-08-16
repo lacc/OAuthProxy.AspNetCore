@@ -16,7 +16,7 @@
 - **Server-Side Secrets:** Keeps OAuth client secrets safe on the server, away from client applications.
 - **Demo & Tests Included:** Comes with a demo project and comprehensive unit tests.
 
-> **Note:** Supports the **Authorization Code flow** and the **Client Credentials flow**. Future flows may be added.
+> **Note:** Supports the **Authorization Code flow**, the **Client Credentials flow** and extendable with Custom Flows. Future flows may be added.
 
 ---
 
