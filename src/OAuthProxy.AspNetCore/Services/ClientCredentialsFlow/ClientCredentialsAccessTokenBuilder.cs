@@ -28,19 +28,19 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             if (!string.IsNullOrEmpty(token?.AccessToken))
             {
                 _logger.LogInformation("Access token found for user {UserId} and service {ServiceName}.", userId, serviceName);
-                if (!token.IsExpired)
+                if (token.IsExpired)
                 {
+                    _logger.LogWarning("Access token is expired for user {UserId} and service {ServiceName}.", userId, serviceName);
                     return new AccessTokenBuilderResponse
                     {
-                        AccessToken = token.AccessToken,
+                        ErrorMessage = "Access token is expired.",
+                        StatusCode = System.Net.HttpStatusCode.Unauthorized
                     };
                 }
 
-                _logger.LogWarning("Access token is expired for user {UserId} and service {ServiceName}.", userId, serviceName);
                 return new AccessTokenBuilderResponse
                 {
-                    ErrorMessage = "Access token is expired.",
-                    StatusCode = System.Net.HttpStatusCode.Unauthorized
+                    AccessToken = token.AccessToken,
                 };
             }
 
