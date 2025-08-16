@@ -390,12 +390,12 @@ Helps when secrets are not stored in `appsettings.json` or user secrets, but ret
         private readonly IConfiguration _configuration;
         public SimpleApiKeyAccessTokenBuilder(IConfiguration configuration)
         {
-            _configuration = configuration;_
+            _configuration = configuration;
         }
  
         public async Task<AccessTokenBuilderResponse> BuildAccessTokenAsync(HttpRequestMessage request, string userId, string serviceName)
         {
-            var apiKey = _configuration["ThirdPartyServices:ServiceA:ApiKey"];_
+            var apiKey = _configuration["ThirdPartyServices:ServiceA:ApiKey"];
             return Task.FromResult(new AccessTokenBuilderResponse
             {
                 AccessToken = apiKey,

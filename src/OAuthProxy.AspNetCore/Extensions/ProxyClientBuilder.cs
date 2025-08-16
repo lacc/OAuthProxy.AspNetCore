@@ -98,7 +98,7 @@ namespace OAuthProxy.AspNetCore.Extensions
         {
             if (_builderOption.AuthorizationFlowBuilder != null)
             {
-                throw new InvalidOperationException("AuthorizationFlowBuilder is already set. Cannot set ClientCredentialsFlow.");
+                throw new InvalidOperationException("AuthorizationFlowBuilder is already set. Cannot set CustomAuthorizationFlow.");
             }
 
             if (configurationSection != null)

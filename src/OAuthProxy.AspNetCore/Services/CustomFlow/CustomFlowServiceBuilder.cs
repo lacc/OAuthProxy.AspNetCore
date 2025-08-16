@@ -20,18 +20,22 @@ namespace OAuthProxy.AspNetCore.Services.CustomFlow
 
         protected virtual void ConfigureDefaultServices()
         {
+            ValidateServiceProviderName();
+        }
+        private void ValidateServiceProviderName()
+        {
             if (string.IsNullOrWhiteSpace(_serviceProviderName))
             {
                 throw new ArgumentException("Service provider name cannot be null or empty.", nameof(_serviceProviderName));
             }
         }
 
-        public CustomFlowServiceBuilder ConfigureAccessTokenBuilder<TAccesTokenBuilder>()
-            where TAccesTokenBuilder : class, IAccessTokenBuilder
+        public CustomFlowServiceBuilder ConfigureAccessTokenBuilder<TAccessTokenBuilder>()
+            where TAccessTokenBuilder : class, IAccessTokenBuilder
         {
             _accessTokenBuilder = services =>
             {
-                services.AddKeyedScoped<IAccessTokenBuilder, TAccesTokenBuilder>(_serviceProviderName);
+                services.AddKeyedScoped<IAccessTokenBuilder, TAccessTokenBuilder>(_serviceProviderName);
             };
             return this;
         }
@@ -44,10 +48,7 @@ namespace OAuthProxy.AspNetCore.Services.CustomFlow
 
         public void Build()
         {
-            if (string.IsNullOrWhiteSpace(_serviceProviderName))
-            {
-                throw new ArgumentException("Service provider name cannot be null or empty.", nameof(_serviceProviderName));
-            }
+            ValidateServiceProviderName();
 
             if (_accessTokenBuilder == null)
             {
