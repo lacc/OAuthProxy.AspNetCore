@@ -53,7 +53,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
 
             var json = await response.Content.ReadAsStringAsync();
             var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(json, _jsonOptions);
-            if (string.IsNullOrEmpty(tokenResponse?.AccessToken))
+            if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.AccessToken))
             {
                 _logger.LogError("Failed to deserialize token response: {Response}", json);
                 throw new InvalidOperationException("Failed to exchange client credentials for access token.");
