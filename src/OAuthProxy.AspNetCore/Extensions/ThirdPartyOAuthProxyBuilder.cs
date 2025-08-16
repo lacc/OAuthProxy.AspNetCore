@@ -34,6 +34,7 @@ namespace OAuthProxy.AspNetCore.Extensions
                 _services.AddHostedService<DatabaseMigrationService>();
             }
             _services.AddScoped<ITokenStorageService, TokenStorageService>();
+            _services.AddScoped<ITokenInvalidator, TokenStorageService>();
             return this;
         }
         public ThirdPartyOAuthProxyBuilder WithDefaultJwtUserIdProvider()

@@ -71,7 +71,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var mockResponse = new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent("{\"accessToken\":\"validtoken\"}")
+                Content = new StringContent("{\"access_token\":\"validtoken\"}")
             };
             mockHandler
                 .Protected()

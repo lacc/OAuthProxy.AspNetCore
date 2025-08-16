@@ -27,6 +27,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
             var token = await _tokenService.GetTokenAsync(userId, serviceName);
             if (!string.IsNullOrEmpty(token?.AccessToken))
             {
+                _logger.LogInformation("Access token found for user {UserId} and service {ServiceName}.", userId, serviceName);
                 if (token.IsExpired)
                 {
                     _logger.LogWarning("Access token is expired for user {UserId} and service {ServiceName}.", userId, serviceName);
@@ -43,6 +44,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 };
             }
 
+            _logger.LogInformation("No valid access token found for user {UserId} and service {ServiceName}. Attempting to exchange client credentials.", userId, serviceName);
             var clientCredentialsExchanger = _authorizationFlowServiceFactory.GetClientCredentialsTokenExchanger(serviceName);
 
             try
@@ -57,6 +59,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 var response = await clientCredentialsExchanger.ExchangeTokenAsync(providerConfig.OAuthConfiguration);
                 await _tokenService.SaveTokenAsync(userId, serviceName, response.AccessToken, NoRefreshTokenValue, response.ExpiresAt);
 
+                _logger.LogInformation("Access token exchanged successfully for user {UserId} and service {ServiceName}.", userId, serviceName);
                 return new AccessTokenBuilderResponse
                 {
                     AccessToken = response.AccessToken,
