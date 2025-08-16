@@ -6,6 +6,7 @@ using OAuthProxy.AspNetCore.Handlers;
 using OAuthProxy.AspNetCore.Services;
 using OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow;
 using OAuthProxy.AspNetCore.Services.ClientCredentialsFlow;
+using OAuthProxy.AspNetCore.Services.CustomFlow;
 
 namespace OAuthProxy.AspNetCore.Extensions
 {
@@ -87,6 +88,25 @@ namespace OAuthProxy.AspNetCore.Extensions
             }
 
             var flowBuilder = new ClientCredentialsFlowServiceBuilder(_builderOption.ServiceProviderName, _services);
+            flowBuilderAction?.Invoke(flowBuilder);
+            _builderOption.AuthorizationFlowBuilder = flowBuilder;
+
+            return this;
+        }
+        
+        public ProxyClientBuilder<TClient> WithCustomAuthorizationFlow(IConfigurationSection? configurationSection = null, Action<CustomFlowServiceBuilder>? flowBuilderAction = null)
+        {
+            if (_builderOption.AuthorizationFlowBuilder != null)
+            {
+                throw new InvalidOperationException("AuthorizationFlowBuilder is already set. Cannot set ClientCredentialsFlow.");
+            }
+
+            if (configurationSection != null)
+            {
+                WithAuthorizationConfig(configurationSection);
+            }
+
+            var flowBuilder = new CustomFlowServiceBuilder(ServiceProviderName, _services);
             flowBuilderAction?.Invoke(flowBuilder);
             _builderOption.AuthorizationFlowBuilder = flowBuilder;
 
