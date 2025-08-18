@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using OAuthProxy.AspNetCore.Abstractions;
 using OAuthProxy.AspNetCore.Configurations;
 using OAuthProxy.AspNetCore.Services;
+using OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow;
 using OAuthProxy.AspNetCore.Services.StateManagement;
 
 namespace OAuthProxy.AspNetCore.Apis
@@ -50,8 +51,7 @@ namespace OAuthProxy.AspNetCore.Apis
                 .WithDisplayName($"OAuth Proxy API for {serviceName}")
                 .WithDescription($"API endpoints for OAuth Proxy service: {serviceName}")
                 .WithName($"OAuthProxyAuthorizeApi_{serviceName}")
-                .RequireAuthorization();
-                //.AllowAnonymous();
+                .AllowAnonymous();
 
             var callbackApi = app.MapGet(callbackUrl, CallbackHandler)
                 .WithDisplayName($"OAuth Proxy Callback API for {serviceName}")
@@ -62,7 +62,8 @@ namespace OAuthProxy.AspNetCore.Apis
             return app;
         }
         private async Task<Results<Ok<string>, RedirectHttpResult, UnauthorizedHttpResult, BadRequest<string>>> HandleAuthorize(
-            HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService)
+            HttpRequest httpRequest, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService,
+            IOptionsSnapshot<AuthorizationCodeFlowApiConfig> apiConfigOptions, IUserIdProvider userIdProvider)
         {
             var urlProvider = serviceFactory.GetAuthorizationUrlProvider(ServiceProviderName);
             if (urlProvider == null)
@@ -82,11 +83,21 @@ namespace OAuthProxy.AspNetCore.Apis
                 string.Empty;
 
             var authorizeUrl = await urlProvider.GetAuthorizeUrlAsync(OAuthConfiguration, redirectUri);
-            authorizeUrl = await stateService.DecorateWithStateAsync(ServiceProviderName, authorizeUrl, new AuthorizationStateParameters
+            var apiConfig = apiConfigOptions.Get(ServiceProviderName);
+            if (!apiConfig.DisableStateValidation)
             {
-                 RedirectUrl = localRedirectUri
-            });
-            
+                if(string.IsNullOrEmpty(userIdProvider.GetCurrentUserId()))
+                {
+                    _logger.LogWarning("User must be logged in to use OAuth authorization flow with state validation.");
+                    return TypedResults.Unauthorized();
+                }
+
+                authorizeUrl = await stateService.DecorateWithStateAsync(ServiceProviderName, authorizeUrl, new AuthorizationStateParameters
+                {
+                    RedirectUrl = localRedirectUri
+                });
+            }
+
             if (httpRequest.Headers.TryGetValue("X-Requested-With", out Microsoft.Extensions.Primitives.StringValues value) &&
                 value == "XMLHttpRequest")
             {
@@ -107,13 +118,40 @@ namespace OAuthProxy.AspNetCore.Apis
         }
 
         private async Task<Results<Ok<string>, BadRequest<string>, UnauthorizedHttpResult, RedirectHttpResult>> CallbackHandler(
-            string code, string state, HttpRequest request, AuthorizationFlowServiceFactory serviceFactory, IAuthorizationStateService stateService, ITokenStorageService tokenStorage)
+            string code, string state, HttpRequest request, AuthorizationFlowServiceFactory serviceFactory, 
+            IAuthorizationStateService stateService, ITokenStorageService tokenStorage, IUserIdProvider userIdProvider, 
+            IOptionsSnapshot<AuthorizationCodeFlowApiConfig> apiConfigOptions)
         {
-            var stateValidationResult = await stateService.ValidateStateAsync(ServiceProviderName, state);
-            if (!stateValidationResult?.IsValid ?? false)
+            string redirectUri = string.Empty;
+            string userId = string.Empty;
+
+            var apiConfig = apiConfigOptions.Get(ServiceProviderName);
+            if (!apiConfig.DisableStateValidation)
             {
-                _logger.LogWarning("Invalid state parameter on callback");
-                return TypedResults.Unauthorized();
+                var stateValidationResult = await stateService.ValidateStateAsync(ServiceProviderName, state);
+                if (!stateValidationResult?.IsValid ?? false)
+                {
+                    _logger.LogWarning("Invalid state parameter on callback");
+                    return TypedResults.Unauthorized();
+                }
+
+                userId = stateValidationResult?.StateParameters?.UserId ?? string.Empty;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("User ID is missing in the state parameters.");
+                    return TypedResults.Unauthorized();
+                }
+
+                redirectUri = stateValidationResult?.StateParameters?.RedirectUrl ?? string.Empty;
+            }
+            else
+            {
+                var currentUserId = userIdProvider.GetCurrentUserId();
+                if (string.IsNullOrEmpty(currentUserId))
+                {
+                    _logger.LogWarning("If State validation is disabled user must be logged in!");
+                    return TypedResults.Unauthorized();
+                }
             }
 
             var tokenExchanger = serviceFactory.GetAuthorizationTokenExchanger(ServiceProviderName);
@@ -125,25 +163,18 @@ namespace OAuthProxy.AspNetCore.Apis
                 return TypedResults.BadRequest("Failed to exchange authorization code for access token.");
             }
 
-            var userId = stateValidationResult?.StateParameters?.UserId;
-            if (string.IsNullOrEmpty(userId))
-            {
-                _logger.LogWarning("User ID is missing in the state parameters.");
-                return TypedResults.Unauthorized();
-            }
-
-            await tokenStorage.SaveTokenAsync(userId, ServiceProviderName, 
+            await tokenStorage.SaveTokenAsync(userId, ServiceProviderName,
                 token.AccessToken, token.RefreshToken ?? string.Empty, token.ExpiresAt);
 
-            var redirectUri = stateValidationResult?.StateParameters?.RedirectUrl ?? string.Empty;
             if (IsValidRedirectUri(redirectUri))
             {
                 _logger.LogInformation("Redirecting to local redirect URI: {RedirectUri}", redirectUri);
                 return TypedResults.Redirect(redirectUri, true, true); // Redirect with permanent status code
             }
-
-            _logger.LogWarning("Invalid redirect URI: {RedirectUri}, returning OK", redirectUri);
-            return TypedResults.Ok("Success");
+            else
+            {
+                return TypedResults.Ok("Authorization successful. You can close this window now.");
+            }
         }
 
         private bool IsValidRedirectUri(string? redirectUri)
