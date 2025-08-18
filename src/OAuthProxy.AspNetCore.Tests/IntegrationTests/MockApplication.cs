@@ -9,9 +9,7 @@ using OAuthProxy.AspNetCore.Tests.IntegrationTests;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add dummy authentication and authorization for testing
-builder.Services.AddAuthentication("Test")
-    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
-builder.Services.AddAuthorization();
+
 
 // Register the SDK with test-friendly options (can be overridden in tests)
 builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder =>

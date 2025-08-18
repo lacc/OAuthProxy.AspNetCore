@@ -13,6 +13,8 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
         private Action<IServiceCollection>? _tokenExchangerBuilder;
         private Action<IServiceCollection>? _refreshTokenExchangerBuilder;
 
+        private bool _disableStateValidation = false;
+
         public AuthorizationCodeFlowServiceBuilder(string serviceProviderName, IServiceCollection services)
         {
             ServiceProviderName = serviceProviderName;
@@ -61,6 +63,13 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
             };
             return this;
         }
+        
+        public AuthorizationCodeFlowServiceBuilder DisableStateValidation()
+        {
+            _disableStateValidation = true;
+
+            return this;
+        }
 
         public AuthorizationCodeFlowServiceBuilder ConfigureRefreshTokenExchanger<TService>()
             where TService : class, IOAuthAuthorizationRefreshTokenExchanger
@@ -80,6 +89,10 @@ namespace OAuthProxy.AspNetCore.Services.AuthorizationCodeFlow
             
             _services.AddKeyedScoped<IAccessTokenBuilder, AuthorizationCodeFlowAccessTokenBuilder>(ServiceProviderName);
             _services.AddKeyedScoped<IProxyApiMapper, OAuthAuthorizationCodeFlowApiMapper>(ServiceProviderName);
+            _services.Configure<AuthorizationCodeFlowApiConfig>(ServiceProviderName, options =>
+            {
+                options.DisableStateValidation = _disableStateValidation;
+            });
 
         }
     }
