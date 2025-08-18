@@ -24,7 +24,7 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
                         [$"ThirdPartyServices:{name}:ClientId"] = "test-client-id",
                         [$"ThirdPartyServices:{name}:ClientSecret"] = "test-client-secret",
                         [$"ThirdPartyServices:{name}:Scope"] = "openid profile email",
-                        [$"ThirdPartyServices:{name}:Scope"] = name
+                        [$"ThirdPartyServices:{name}:Name"] = name
                     };
                     configBuilder.AddInMemoryCollection(testConfig);
                 });

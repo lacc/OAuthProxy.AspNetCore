@@ -146,12 +146,13 @@ namespace OAuthProxy.AspNetCore.Apis
             }
             else
             {
-                var currentUserId = userIdProvider.GetCurrentUserId();
-                if (string.IsNullOrEmpty(currentUserId))
-                {
-                    _logger.LogWarning("If State validation is disabled user must be logged in!");
-                    return TypedResults.Unauthorized();
-                }
+                userId = userIdProvider.GetCurrentUserId() ?? string.Empty;
+            }
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("If State validation is disabled user must be logged in!");
+                return TypedResults.Unauthorized();
             }
 
             var tokenExchanger = serviceFactory.GetAuthorizationTokenExchanger(ServiceProviderName);
