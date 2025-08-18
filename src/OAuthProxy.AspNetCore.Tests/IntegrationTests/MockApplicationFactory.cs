@@ -10,7 +10,7 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
     class TestProvider { }
     internal static class MockApplicationFactory
     {
-        public static WebApplicationFactory<MockApplication> GetFactory(this WebApplicationFactory<MockApplication> factory, string name, bool withAuthenicatedUser = true, bool disableStateValidation = false)
+        public static WebApplicationFactory<MockApplication> GetFactory(this WebApplicationFactory<MockApplication> factory, string name, bool withAuthenticatedUser = true, bool disableStateValidation = false)
         {
             var res = factory.WithWebHostBuilder(builder =>
             {
@@ -31,7 +31,7 @@ namespace OAuthProxy.AspNetCore.Tests.IntegrationTests
 
                 builder.ConfigureServices((context, services) =>
                 {
-                    if (withAuthenicatedUser)
+                    if (withAuthenticatedUser)
                     {
                         services.AddAuthentication("Test")
                             .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });

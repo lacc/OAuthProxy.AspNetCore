@@ -86,7 +86,7 @@ namespace OAuthProxy.AspNetCore.Apis
             var apiConfig = apiConfigOptions.Get(ServiceProviderName);
             if (!apiConfig.DisableStateValidation)
             {
-                if(string.IsNullOrEmpty(userIdProvider.GetCurrentUserId()))
+                if (string.IsNullOrEmpty(userIdProvider.GetCurrentUserId()))
                 {
                     _logger.LogWarning("User must be logged in to use OAuth authorization flow with state validation.");
                     return TypedResults.Unauthorized();
@@ -108,7 +108,7 @@ namespace OAuthProxy.AspNetCore.Apis
 
             // For non-AJAX requests, perform a redirect
             _logger.LogInformation("Redirecting to authorization URL: {authorizeUrl}", authorizeUrl);
-            if(httpRequest.HttpContext?.Response == null)
+            if (httpRequest.HttpContext?.Response == null)
             {
                 _logger.LogError("HttpContext is null, cannot set response status code or headers. returning OK with url");
                 return TypedResults.Ok(authorizeUrl);
@@ -172,10 +172,8 @@ namespace OAuthProxy.AspNetCore.Apis
                 _logger.LogInformation("Redirecting to local redirect URI: {RedirectUri}", redirectUri);
                 return TypedResults.Redirect(redirectUri, true, true); // Redirect with permanent status code
             }
-            else
-            {
-                return TypedResults.Ok("Authorization successful. You can close this window now.");
-            }
+                
+            return TypedResults.Ok("Authorization successful. You can close this window now.");
         }
 
         private bool IsValidRedirectUri(string? redirectUri)
