@@ -122,8 +122,8 @@ namespace OAuthProxy.AspNetCore.Apis
             IAuthorizationStateService stateService, ITokenStorageService tokenStorage, IUserIdProvider userIdProvider, 
             IOptionsSnapshot<AuthorizationCodeFlowApiConfig> apiConfigOptions)
         {
-            string redirectUri = string.Empty;
-            string userId = string.Empty;
+            string? redirectUri = null;
+            string? userId = null;
 
             var apiConfig = apiConfigOptions.Get(ServiceProviderName);
             if (!apiConfig.DisableStateValidation)
@@ -151,7 +151,7 @@ namespace OAuthProxy.AspNetCore.Apis
 
             if (string.IsNullOrEmpty(userId))
             {
-                _logger.LogWarning("If State validation is disabled user must be logged in!");
+                _logger.LogWarning("If state validation is disabled, user must be logged in.");
                 return TypedResults.Unauthorized();
             }
 
@@ -167,7 +167,7 @@ namespace OAuthProxy.AspNetCore.Apis
             await tokenStorage.SaveTokenAsync(userId, ServiceProviderName,
                 token.AccessToken, token.RefreshToken ?? string.Empty, token.ExpiresAt);
 
-            if (IsValidRedirectUri(redirectUri))
+            if (!string.IsNullOrEmpty(redirectUri) && IsValidRedirectUri(redirectUri))
             {
                 _logger.LogInformation("Redirecting to local redirect URI: {RedirectUri}", redirectUri);
                 return TypedResults.Redirect(redirectUri, true, true); // Redirect with permanent status code
