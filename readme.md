@@ -57,7 +57,7 @@
 - **Comprehensive Tests:** Ensures reliability with unit tests.
 - **Authorization Code Flow:** Supports user authentication with third-party services.
 - **Client Credentials Flow:** Supports machine-to-machine authentication for backend services.
-- **Custom Flows:** Allows for custom flows with your own logic (eg simple Api Key authentication see below example).
+- **Custom Flows:** Allows for custom flows with your own logic (eg simple Api Key authentication see example below).
 ---
 
 ## Prerequisites
@@ -433,7 +433,7 @@ Helps when secrets are not stored in `appsettings.json` or user secrets, but ret
     ```
 
 ### Enable not secure HTTP redirects
-    HTTP redirects instead of HTTPS can be enabled by proxy client by setting the `AllowHttpRedirects` to true.
+    HTTP redirects instead of HTTPS can be enabled by the proxy client by setting the `AllowHttpRedirects` to true.
 
     > **Note:** Use this with caution only for testing purposes, as it can expose sensitive data over insecure connections.
     ```csharp
