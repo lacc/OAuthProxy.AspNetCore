@@ -41,7 +41,7 @@ builder.Services.AddThirdPartyOAuthProxy(builder.Configuration, proxyBuilder => 
     .ConfigureApiMapper(config =>
     {
         config.ProxyUrlPrefix = "api/oauth";
-        config.AuthorizeRedirectUrlParameterName = "local_redirect_uri";
+        config.AuthorizeLocalRedirectUrlParameterName = "local_redirect_uri";
         config.WhitelistedRedirectUrls =
         [
             "https://localhost:5001/",

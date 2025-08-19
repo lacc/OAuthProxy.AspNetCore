@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <Version>2.2.32-dev3</Version>
+    <Version>2.2.34-dev1</Version>
     <Authors>lacc</Authors>
     <PackageId>OAuthProxy.AspNetCore</PackageId>
     <PackageDescription>OAuthProxy.AspNetCore is a modular, extensible ASP.NET Core library that simplifies OAuth flows for third-party services by acting as a secure proxy. It uses Entity Framework Core for token storage and supports any EF Core-compatible database provider.</PackageDescription>

@@ -72,14 +72,15 @@ namespace OAuthProxy.AspNetCore.Apis
                 return TypedResults.BadRequest("Service configuration error");
             }
 
-            var redirectUri = httpRequest.GetDisplayUrl().Replace("authorize", "callback");
-            if (!string.IsNullOrEmpty(httpRequest.QueryString.Value))
+            var redirectUri = GenerateRedirectUri(httpRequest);
+            if (!IsValidRedirectUri(redirectUri))
             {
-                redirectUri = redirectUri.Replace(httpRequest.QueryString.Value, "");
+                _logger.LogError("Invalid redirect URI: {RedirectUri}", redirectUri);
+                return TypedResults.BadRequest("Invalid redirect URI.");
             }
-        
-            var localRedirectUri = httpRequest.Query.ContainsKey(_proxyConfiguration.ApiMapperConfiguration.AuthorizeRedirectUrlParameterName) ?
-                httpRequest.Query[_proxyConfiguration.ApiMapperConfiguration.AuthorizeRedirectUrlParameterName].ToString() :
+
+            var localRedirectUri = httpRequest.Query.ContainsKey(_proxyConfiguration.ApiMapperConfiguration.AuthorizeLocalRedirectUrlParameterName) ?
+                httpRequest.Query[_proxyConfiguration.ApiMapperConfiguration.AuthorizeLocalRedirectUrlParameterName].ToString() :
                 string.Empty;
 
             var authorizeUrl = await urlProvider.GetAuthorizeUrlAsync(OAuthConfiguration, redirectUri);
@@ -115,6 +116,30 @@ namespace OAuthProxy.AspNetCore.Apis
             }
 
             return TypedResults.Redirect(authorizeUrl, false, true); // Redirect with temporary status code
+        }
+
+        private string GenerateRedirectUri(HttpRequest httpRequest)
+        {
+            string redirectUri;
+            if (httpRequest.Query.ContainsKey(_proxyConfiguration.ApiMapperConfiguration.AuthorizeRedirectUrlParameterName))
+            {
+                redirectUri = httpRequest.Query[_proxyConfiguration.ApiMapperConfiguration.AuthorizeRedirectUrlParameterName].ToString();
+            }
+            else if (!string.IsNullOrEmpty(OAuthConfiguration.RedirectUri))
+            {
+                redirectUri = OAuthConfiguration.RedirectUri;
+            }
+            else
+            {
+                //fallback to default callback URI
+                redirectUri = httpRequest.GetDisplayUrl().Replace("authorize", "callback");
+                if (!string.IsNullOrEmpty(httpRequest.QueryString.Value))
+                {
+                    redirectUri = redirectUri.Replace(httpRequest.QueryString.Value, "");
+                }
+            }
+
+            return redirectUri;
         }
 
         private async Task<Results<Ok<string>, BadRequest<string>, UnauthorizedHttpResult, RedirectHttpResult>> CallbackHandler(
