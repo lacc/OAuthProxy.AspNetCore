@@ -22,17 +22,27 @@
 
 ## Table of Contents
 
+- [Key Benefits](#key-benefits)
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [Client Credentials Flow](#client-credentials-flow)
 - [Configuration](#configuration)
 - [Usage](#usage)
-- [Extending the Library](#extending-the-library)
+- [Configuring and Extending the Library](#configuring-and-extending-the-library)
+  - [Storage options](#storage-options)
+  - [Configure dotnet Data Protection](#configure-dotnet-data-protection)
+  - [Custom User ID Provider](#custom-user-id-provider)
+  - [Configure API Mapper](#configure-api-mapper)
+  - [Configure 3rd party service](#configure-3rd-party-service)
+  - [Extend with custom HTTP Client Message Handler](#extend-with-custom-http-client-message-handler)
+  - [Extend with custom Secret Provider](#extend-with-custom-secret-provider)
+  - [Extend with Custom Flow](#extend-with-custom-flow)
+  - [Enable not secure HTTP redirects](#enable-not-secure-http-redirects)
+- [Example: Custom Endpoint with Minimal APIs](#example-custom-endpoint-with-minimal-apis)
 - [Database Migrations](#database-migrations)
 - [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
+
 
 ---
 
@@ -47,7 +57,7 @@
 - **Comprehensive Tests:** Ensures reliability with unit tests.
 - **Authorization Code Flow:** Supports user authentication with third-party services.
 - **Client Credentials Flow:** Supports machine-to-machine authentication for backend services.
-- **Custom Flows:** Allows for custom flows with your own logic (eg simple Api Key authentication see bellow example).
+- **Custom Flows:** Allows for custom flows with your own logic, eg simple Api Key authentication see example below.
 ---
 
 ## Prerequisites
@@ -383,44 +393,59 @@ Helps when secrets are not stored in `appsettings.json` or user secrets, but ret
     ```
 
 ### Extend with Custom Flow
-  - Create a custom IAccessTokenBuilder to control the flow of the authorization process:
+- Create a custom IAccessTokenBuilder to control the flow of the authorization process:
   
-    ```csharp
-    public class SimpleApiKeyAccessTokenBuilder : IAccessTokenBuilder
-    {
-        private readonly IConfiguration _configuration;
-        public SimpleApiKeyAccessTokenBuilder(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
+  ```csharp
+  public class SimpleApiKeyAccessTokenBuilder : IAccessTokenBuilder
+  {
+      private readonly IConfiguration _configuration;
+      public SimpleApiKeyAccessTokenBuilder(IConfiguration configuration)
+      {
+          _configuration = configuration;
+      }
  
-        public async Task<AccessTokenBuilderResponse> BuildAccessTokenAsync(HttpRequestMessage request, string userId, string serviceName)
-        {
-            var apiKey = _configuration["ThirdPartyServices:ServiceA:ApiKey"];
-            return Task.FromResult(new AccessTokenBuilderResponse
-            {
-                AccessToken = apiKey,
-                StatusCode = System.Net.HttpStatusCode.OK,
-                ErrorMessage = string.Empty
-            });
-        }
+      public async Task<AccessTokenBuilderResponse> BuildAccessTokenAsync(HttpRequestMessage request, string userId, string serviceName)
+      {
+          var apiKey = _configuration["ThirdPartyServices:ServiceA:ApiKey"];
+          return Task.FromResult(new AccessTokenBuilderResponse
+          {
+              AccessToken = apiKey,
+              StatusCode = System.Net.HttpStatusCode.OK,
+              ErrorMessage = string.Empty
+          });
+      }
+  }
+  ```
+  
+- Configure the new builder `WithCustomAuthorizationFlow`:
+  
+  ```csharp
+  proxyClientBuilder
+      .WithCustomAuthorizationFlow(configurationSection, builder =>
+      {
+          builder.ConfigureAccessTokenBuilder<SimpleApiKeyAccessTokenBuilder>();
+          builder.ConfigureCustomServices(services =>
+          {
+              // Register any additional services needed for the custom flow
+              services.AddSingleton<CustomService>();
+          });
+      });
+  ```
+
+### Enable not secure HTTP redirects
+HTTP redirects instead of HTTPS can be enabled for the proxy client by setting the `AllowHttpRedirects` to true.
+
+> **Note:** Use this with caution only for testing purposes, as it can expose sensitive data over insecure connections.
+
+```csharp
+    .AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => 
+    {
+        proxyClientBuilder.AllowHttpRedirects = true;
+        proxyClientBuilder
+            .AddHttpMessageHandler<DummyHttpMessageHandler>()
+            .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"));
     }
-    ```
-  
-  - Configure the new builder `WithCustomAuthorizationFlow`:
-  
-    ```csharp
-    proxyClientBuilder
-        .WithCustomAuthorizationFlow(configurationSection, builder =>
-        {
-            builder.ConfigureAccessTokenBuilder<SimpleApiKeyAccessTokenBuilder>();
-            builder.ConfigureCustomServices(services =>
-            {
-                // Register any additional services needed for the custom flow
-                services.AddSingleton<CustomService>();
-            });
-        });
-    ```
+```
 
 ## Example: Custom Endpoint with Minimal APIs
 Here’s how to create a custom endpoint using ASP.NET Core minimal APIs, which offers more control than the generic proxy:
@@ -469,19 +494,6 @@ dotnet test
 
 ---
 
-### Enable not secure HTTP redirects
-HTTP redirects instead of HTTPS can be enabled by proxy client by setting the `AllowHttpRedirects` to true.
-
-> **Note:** Use this with caution only for testing purposes, as it can expose sensitive data over insecure connections.
-```csharp
-  .AddOAuthServiceClient<ThirdPartyClientB>("ServiceB", proxyClientBuilder => 
-  {
-        proxyClientBuilder.AllowHttpRedirects = true;
-        proxyClientBuilder
-            .AddHttpMessageHandler<DummyHttpMessageHandler>()
-            .WithAuthorizationCodeFlow(builder.Configuration.GetSection("ThirdPartyServices:ServiceB"));
-  }
-```
 
 ## Contributing
 
