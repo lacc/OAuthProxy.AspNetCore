@@ -75,7 +75,7 @@ namespace OAuthProxy.AspNetCore.Apis
             var redirectUri = GenerateRedirectUri(httpRequest);
             if (!IsValidRedirectUri(redirectUri))
             {
-                _logger.LogError("Invalid redirect URI: {RedirectUri}", redirectUri);
+                _logger.LogError("Invalid redirect URI: {RedirectUri}", redirectUri.Replace("\r", "").Replace("\n", ""));
                 return TypedResults.BadRequest("Invalid redirect URI.");
             }
 
@@ -132,7 +132,10 @@ namespace OAuthProxy.AspNetCore.Apis
             else
             {
                 //fallback to default callback URI
-                redirectUri = httpRequest.GetDisplayUrl().Replace("authorize", "callback");
+                redirectUri = httpRequest
+                    .GetDisplayUrl()
+                    .Replace(httpRequest.Path, "/callback", StringComparison.OrdinalIgnoreCase);
+
                 if (!string.IsNullOrEmpty(httpRequest.QueryString.Value))
                 {
                     redirectUri = redirectUri.Replace(httpRequest.QueryString.Value, "");

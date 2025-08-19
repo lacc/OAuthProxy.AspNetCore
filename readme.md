@@ -83,7 +83,7 @@ Follow these steps to set up and run the demo project:
          "TokenEndpoint": "https://provider.com/oauth/token",
          "AuthorizeEndpoint": "https://provider.com/oauth/authorize",
          "ApiBaseUrl": "https://api.provider.com",
-         "RedirectUrl": "https://yourserver.com/api/proxy/ServiceA/callback"
+         "RedirectUri": "https://yourserver.com/api/proxy/ServiceA/callback"
          "Scopes": "read write"
        }
      }
