@@ -9,9 +9,14 @@
         public string ProxyUrlPrefix { get; set; } = "/api/proxy";
 
         /// <summary>
+        /// Gets or sets the name of the query parameter for redirect_uri to be sent to the provider (optional parameter).
+        /// </summary>
+        public string AuthorizeRedirectUrlParameterName { get; set; } = "redirect_uri";
+
+        /// <summary>
         /// Gets or sets the name of the query parameter used to specify the final redirect URL after the authorization flow.
         /// </summary>
-        public string AuthorizeRedirectUrlParameterName { get; set; } = "local_redirect_uri";
+        public string AuthorizeLocalRedirectUrlParameterName { get; set; } = "local_redirect_uri";
 
         /// <summary>
         /// Gets or sets the list of URLs that are allowed for redirection.

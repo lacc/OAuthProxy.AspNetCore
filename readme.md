@@ -47,7 +47,7 @@
 - **Comprehensive Tests:** Ensures reliability with unit tests.
 - **Authorization Code Flow:** Supports user authentication with third-party services.
 - **Client Credentials Flow:** Supports machine-to-machine authentication for backend services.
-
+- **Custom Flows:** Allows for custom flows with your own logic (eg simple Api Key authentication see bellow example).
 ---
 
 ## Prerequisites
@@ -83,6 +83,7 @@ Follow these steps to set up and run the demo project:
          "TokenEndpoint": "https://provider.com/oauth/token",
          "AuthorizeEndpoint": "https://provider.com/oauth/authorize",
          "ApiBaseUrl": "https://api.provider.com",
+         "RedirectUri": "https://yourserver.com/api/proxy/ServiceA/callback"
          "Scopes": "read write"
        }
      }
