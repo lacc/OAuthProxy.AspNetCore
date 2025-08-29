@@ -30,7 +30,7 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 _logger.LogInformation("Access token found for user {UserId} and service {ServiceName}.", userId, serviceName);
                 if (token.IsExpired)
                 {
-                    _logger.LogWarning("Access token is expired for user {UserId} and service {ServiceName}. Refreshing with exchamge", userId, serviceName);
+                    _logger.LogWarning("Access token is expired for user {UserId} and service {ServiceName}. Refreshing with exchange", userId, serviceName);
                 }
                 else
                 {
