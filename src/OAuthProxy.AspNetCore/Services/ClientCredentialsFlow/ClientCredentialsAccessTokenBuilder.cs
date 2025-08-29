@@ -30,21 +30,21 @@ namespace OAuthProxy.AspNetCore.Services.ClientCredentialsFlow
                 _logger.LogInformation("Access token found for user {UserId} and service {ServiceName}.", userId, serviceName);
                 if (token.IsExpired)
                 {
-                    _logger.LogWarning("Access token is expired for user {UserId} and service {ServiceName}.", userId, serviceName);
+                    _logger.LogWarning("Access token is expired for user {UserId} and service {ServiceName}. Refreshing with exchange", userId, serviceName);
+                }
+                else
+                {
                     return new AccessTokenBuilderResponse
                     {
-                        ErrorMessage = "Access token is expired.",
-                        StatusCode = System.Net.HttpStatusCode.Unauthorized
+                        AccessToken = token.AccessToken,
                     };
                 }
-
-                return new AccessTokenBuilderResponse
-                {
-                    AccessToken = token.AccessToken,
-                };
+            }
+            else
+            {
+                _logger.LogInformation("No valid access token found for user {UserId} and service {ServiceName}. Attempting to exchange client credentials.", userId, serviceName);
             }
 
-            _logger.LogInformation("No valid access token found for user {UserId} and service {ServiceName}. Attempting to exchange client credentials.", userId, serviceName);
             var clientCredentialsExchanger = _authorizationFlowServiceFactory.GetClientCredentialsTokenExchanger(serviceName);
 
             try
