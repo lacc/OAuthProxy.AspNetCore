@@ -140,7 +140,7 @@ namespace OAuthProxy.AspNetCore.Tests
         }
 
         [Fact]
-        public async Task SendAsync_ReturnsUnauthorized_IfTokenExpired()
+        public async Task SendAsync_ReturnsExchangesNewToken_IfTokenExpired()
         {
             var expiredToken = new UserTokenDTO
             {
@@ -159,11 +159,20 @@ namespace OAuthProxy.AspNetCore.Tests
             var invoker = CreateInvoker("serviceA", tokenService.Object, userIdProvider.Object, proxyRequestContext.Object);
             var response = await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://test"), CancellationToken.None);
 
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            tokenService.Verify(x => x.SaveTokenAsync(
+                    "user1",
+                    "serviceA",
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.Is<DateTime>(dt =>
+                        Math.Abs((dt - DateTime.UtcNow.AddDays(_tokenExpirationInDays)).TotalSeconds) < 5
+                    )),
+                Times.Once);
         }
 
         [Fact]
-        public async Task SendAsync_ReturnsUnauthorized_IfExchangeFails()
+        public async Task SendAsync_Returns500_IfExchangeFails()
         {
             var expiredToken = new UserTokenDTO
             {
@@ -173,7 +182,9 @@ namespace OAuthProxy.AspNetCore.Tests
             };
             var tokenService = new Mock<ITokenStorageService>();
             tokenService.Setup(x => x.GetTokenAsync("user1", "serviceA")).ReturnsAsync(expiredToken);
-            tokenService.Setup(x => x.RefreshTokenAsync("user1", "serviceA", "refresh")).ReturnsAsync((UserTokenDTO?)null);
+            tokenService.Setup(x => x.SaveTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>() ))
+                .ThrowsAsync(new Exception("Failed saving token"));
+
             var userIdProvider = new Mock<IUserIdProvider>();
             userIdProvider.Setup(x => x.GetCurrentUserId()).Returns("user1");
             var proxyRequestContext = new Mock<IProxyRequestContext>();
@@ -182,7 +193,7 @@ namespace OAuthProxy.AspNetCore.Tests
             var invoker = CreateInvoker("serviceA", tokenService.Object, userIdProvider.Object, proxyRequestContext.Object);
             var response = await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://test"), CancellationToken.None);
 
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
         }
 
         [Fact]
